@@ -1,0 +1,22 @@
+{
+  "name": "@danopia/cosmosaur-client",
+  "version": "0.1.0",
+  "description": "A Meteor-like client library",
+  "type": "module",
+  "exports": {
+    "./meteor-api/meteor": "./client/meteor-api/meteor.ts",
+    "./meteor-api/mongo": "./client/meteor-api/mongo.ts",
+    "./meteor-api/check": "./shared/meteor-api/check.ts",
+    "./run": "./client/run.ts"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "packageManager": "yarn@4.9.1",
+  "devDependencies": {
+    "mongodb": "^6.16.0",
+    "typescript": "^5.8.3"
+  }
+}
