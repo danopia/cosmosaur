@@ -1,8 +1,11 @@
-import { EJSON, type EJSONableProperty } from "jsr:@cloudydeno/ejson@0.1.1";
-import { ROOT_CONTEXT, SpanKind, TextMapGetter, propagation, trace } from "jsr:@cloudydeno/opentelemetry@0.10.1/pkg/api";
+import { EJSON, type EJSONableProperty } from "@cloudydeno/ejson";
+import { ROOT_CONTEXT, SpanKind, type TextMapGetter, propagation, trace } from "@cloudydeno/opentelemetry/pkg/api";
 
-import { ClientSentPacket, DocumentFields, MeteorError, OutboundSubscription, ServerSentPacket } from "../../shared/ddp/types.ts";
+import type { ClientSentPacket, DocumentFields, MeteorError, OutboundSubscription, ServerSentPacket } from "../../shared/ddp/types.ts";
 import { RandomStream } from "../../shared/ddp/random.ts";
+
+import type * as types from '../../shared/meteor-types/meteor.d.ts';
+import { PresentedCollection } from "./PresentedCollection.ts";
 
 export type MethodHandler = (socket: DdpSocket, params: EJSONableProperty[], random: RandomStream | null) => EJSONableProperty | Promise<EJSONableProperty>;
 export type PublicationHandler = (socket: DdpSocketSubscription, params: EJSONableProperty[]) => Promise<void> | void;
@@ -71,9 +74,6 @@ const BaggageGetter: TextMapGetter<Record<string, string>> = {
   get(h,k) { return h[k]; },
   keys(h) { return Object.keys(h); },
 };
-
-import type * as types from '../../shared/meteor-types/meteor.d.ts';
-import { PresentedCollection } from "./PresentedCollection.ts";
 
 export class DdpSocketSubscription implements OutboundSubscription, types.Subscription {
   constructor(

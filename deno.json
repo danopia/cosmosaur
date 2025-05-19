@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "license": "MIT",
   "imports": {
+    "@cloudydeno/ejson": "jsr:@cloudydeno/ejson@^0.1",
+    "@cloudydeno/opentelemetry": "jsr:@cloudydeno/opentelemetry@^0.10",
     "mongodb": "npm:mongodb@^6"
   },
   "exports": {
