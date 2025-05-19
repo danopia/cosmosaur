@@ -12,6 +12,7 @@
     "./meteor-api/mongo": "./server/meteor-api/mongo.ts",
     "./meteor-api/check": "./shared/meteor-api/check.ts",
     "./ddp": "./server/ddp/mod.ts",
+    "./ddp/otlp": "./server/ddp/otlp.ts",
     "./build-html": "./server/build-html.ts",
     ".": "./server/mod.ts"
   },

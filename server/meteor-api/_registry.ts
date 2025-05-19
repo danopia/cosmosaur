@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { CollectionDriver } from "../types.ts";
+import type { CollectionDriver } from "../types.ts";
 import { DdpInterface, DdpSocket } from "../ddp/mod.ts";
-import { RandomStream } from "../../shared/ddp/random.ts";
+import type { RandomStream } from "../../shared/ddp/random.ts";
 
 export const Defaults: {
   ddpInterface: DdpInterface;

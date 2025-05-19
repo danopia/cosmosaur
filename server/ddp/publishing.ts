@@ -1,4 +1,4 @@
-import { DocumentFields, ServerSentPacket } from "../../shared/ddp/types.ts";
+import type { DocumentFields, ServerSentPacket } from "../../shared/ddp/types.ts";
 
 export interface PresentedDocument {
   // collection: string;

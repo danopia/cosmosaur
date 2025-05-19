@@ -5,7 +5,7 @@ import type { ClientSentPacket, DocumentFields, MeteorError, OutboundSubscriptio
 import { RandomStream } from "../../shared/ddp/random.ts";
 
 import type * as types from '../../shared/meteor-types/meteor.d.ts';
-import { PresentedCollection } from "./PresentedCollection.ts";
+import { PresentedCollection } from "./publishing.ts";
 
 export type MethodHandler = (socket: DdpSocket, params: EJSONableProperty[], random: RandomStream | null) => EJSONableProperty | Promise<EJSONableProperty>;
 export type PublicationHandler = (socket: DdpSocketSubscription, params: EJSONableProperty[]) => Promise<void> | void;
