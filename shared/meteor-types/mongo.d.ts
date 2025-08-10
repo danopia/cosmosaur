@@ -101,8 +101,8 @@ export namespace Mongo {
      * @param name The name of the collection instance.
      */
     getCollection<
-        TCollection extends Collection<any, any> | undefined = Collection<Document> | undefined
-    >(name: string): TCollection;
+        TCollection extends Collection<any, any> = Collection<Document>
+    >(name: string): TCollection | null;
   }
   interface Collection<T extends Document, U = T> {
     allow<Fn extends Transform<T> = undefined>(options: {

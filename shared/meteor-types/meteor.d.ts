@@ -281,14 +281,14 @@ export namespace Meteor {
    * @param func The function to run
    * @param delay Number of milliseconds to wait between each function call.
    */
-  function setInterval(func: Function, delay: number): number;
+  function setInterval(func: () => void, delay: number): number;
 
   /**
    * Call a function in the future after waiting for a specified delay.
    * @param func The function to run
    * @param delay Number of milliseconds to wait before calling function
    */
-  function setTimeout(func: Function, delay: number): number;
+  function setTimeout(func: () => void, delay: number): number;
   /**
    * Cancel a repeating function call scheduled by `Meteor.setInterval`.
    * @param id The handle returned by `Meteor.setInterval`
@@ -304,7 +304,7 @@ export namespace Meteor {
    * Defer execution of a function to run asynchronously in the background (similar to `Meteor.setTimeout(func, 0)`.
    * @param func The function to run
    */
-  function defer(func: Function): void;
+  function defer(func: () => void | Promise<void>): void;
   /** Timeout **/
 
   /** utils **/
@@ -312,7 +312,7 @@ export namespace Meteor {
    * Run code when a client or a server starts.
    * @param func A function to run on startup.
    */
-  function startup(func: Function): void;
+  function startup(func: () => void | Promise<void>): void;
 
   /**
    * Wrap a function that takes a callback function as its final parameter.

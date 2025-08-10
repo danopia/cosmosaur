@@ -3,25 +3,34 @@
   "version": "0.1.0",
   "license": "MIT",
   "imports": {
-    "@cloudydeno/ejson": "jsr:@cloudydeno/ejson@^0.1",
-    "@cloudydeno/opentelemetry": "jsr:@cloudydeno/opentelemetry@^0.10",
-    "mongodb": "npm:mongodb@^6"
+    "meteor/meteor": "./server/meteor-api/meteor.ts",
+    "meteor/mongo": "./server/meteor-api/mongo.ts",
+    "meteor/check": "./shared/meteor-api/check.ts",
+    "@cloudydeno/ddp": "jsr:@cloudydeno/ddp@^0.1.5",
+    "@cloudydeno/ejson": "jsr:@cloudydeno/ejson@^0.1.1",
+    "@cloudydeno/opentelemetry": "jsr:@cloudydeno/opentelemetry@^0.10.3",
+    "@dist-app/stdlib": "jsr:@dist-app/stdlib@^0.1.7",
+    "mongodb": "npm:mongodb@^6",
+    "sift": "npm:sift@^17.1.3"
   },
   "exports": {
     "./meteor-api/meteor": "./server/meteor-api/meteor.ts",
     "./meteor-api/mongo": "./server/meteor-api/mongo.ts",
     "./meteor-api/check": "./shared/meteor-api/check.ts",
-    "./ddp": "./server/ddp/mod.ts",
-    "./ddp/otlp": "./server/ddp/otlp.ts",
+    "./meteor-types/ddp": "./shared/meteor-types/ddp.d.ts",
+    "./meteor-types/ejson": "./shared/meteor-types/ejson.d.ts",
+    "./meteor-types/meteor": "./shared/meteor-types/meteor.d.ts",
+    "./meteor-types/mongo": "./shared/meteor-types/mongo.d.ts",
     "./build-html": "./server/build-html.ts",
-    ".": "./server/mod.ts"
+    "./publishable": "./server/publishable.ts",
+    "./registry": "./server/registry.ts"
   },
   "nodeModulesDir": "none",
   "exclude": [
     ".github",
     ".gitignore",
     "node_modules",
-    "testbed",
+    "testbed/links-demo",
     "package.json",
     "yarn.lock",
     ".*",
