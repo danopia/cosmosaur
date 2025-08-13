@@ -1,11 +1,20 @@
 import { serveWebsocket } from "@cloudydeno/ddp/server";
-import { getInterface, withDatabase } from "@danopia/cosmosaur-server/registry";
+import { Database, getInterface, withDatabase } from "@danopia/cosmosaur-server/registry";
 import { KvDocDatabase } from "../server/storage/deno-kv.ts";
+import { MongoStorageDatabase } from "../server/storage/mongodb.ts";
+import { MongoClient } from "mongodb";
 
-console.debug('Opening KV database...');
-const kv = await Deno.openKv();
+let database: Database;
+if (Deno.args[0]) {
+  console.debug('Opening MongoDB database...');
+  const driver = await MongoClient.connect(Deno.args[0]);
+  database = new MongoStorageDatabase(driver.db());
+} else {
+  console.debug('Opening KV database...');
+  const kv = await Deno.openKv();
+  database = new KvDocDatabase(kv, ['database']);
+}
 
-const database = new KvDocDatabase(kv, ['database']);
 await withDatabase(database, async () => {
 
   console.debug('Loading server modules...');

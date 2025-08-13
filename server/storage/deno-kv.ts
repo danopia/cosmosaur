@@ -2,9 +2,9 @@
 import sift from "https://esm.sh/sift@17.1.3";
 
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
-import { getRandom, getRandomStream, withRandom, type Database } from "@danopia/cosmosaur-server/registry";
-import { Random, RandomStream } from "@cloudydeno/ddp/random";
-import { Subscribable, SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+import { getRandomStream, type Database } from "@danopia/cosmosaur-server/registry";
+import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+import { AsyncStorageCursor } from "./async-base.ts";
 
 // TODO: use KvRealtimeContext (originally from dist-app-deno) to provide actual events
 
@@ -50,7 +50,7 @@ export class KvDocCollection<Tdoc extends HasId> implements Collection<Tdoc> {
     }
   }
 
-  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts): AsyncGenerator<SubscriptionEvent> {
+  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts, signal: AbortSignal): AsyncGenerator<SubscriptionEvent> {
     // TODO: use a kv realtime system to manage emitting events
     for await (const {_id, ...fields} of this.#findGenerator(selector, opts)) {
       yield {
@@ -78,14 +78,14 @@ export class KvDocCollection<Tdoc extends HasId> implements Collection<Tdoc> {
   find(selector: Record<string, unknown> = {}, opts: FindOpts = {}): Cursor<Tdoc> {
     return new KvDocCursor(
       () => this.#findGenerator(selector, opts),
-      () => ReadableStream.from(this.#eventGenerator(selector, opts)),
+      (signal: AbortSignal) => ReadableStream.from(this.#eventGenerator(selector, opts, signal)),
     );
   }
 
   insert(): never {
     throw new Error(`Not implemented`);
   }
-  async insertAsync(doc: OptionalId<Tdoc>, callback?: Function): Promise<string> {
+  async insertAsync(doc: OptionalId<Tdoc>, callback?: (err: null, newId: string | null) => void): Promise<string> {
     const random = getRandomStream(`/collection/${this.name}`);
     const newId = doc._id ?? random.id();
     const key = [...this.prefix, 'coll', this.name, 'docs', newId];
@@ -187,69 +187,30 @@ export function makeReturnDoc<Tdoc extends HasId>(original: Tdoc, opts: FindOpts
   return subset as Tdoc; // TODO: this is a lie once fields is supplied
 }
 
-class KvDocCursor<Tdoc extends HasId> implements Cursor<Tdoc>, Iterable<Tdoc>, Subscribable {
+class KvDocCursor<Tdoc extends HasId> extends AsyncStorageCursor<Tdoc> implements Cursor<Tdoc>, Iterable<Tdoc>, Subscribable {
 
   constructor(
-    private readonly findGenerator: () => AsyncGenerator<Tdoc>,
-    private readonly subscribable: () => ReadableStream<SubscriptionEvent>,
-  ) {}
-
-  [symbolSubscribable](): ReadableStream<SubscriptionEvent> {
-    return this.subscribable();
+    findGenerator: () => AsyncGenerator<Tdoc>,
+    private readonly subscribable: (signal: AbortSignal) => ReadableStream<SubscriptionEvent>,
+  ) {
+    super(findGenerator);
   }
 
-  async countAsync(applySkipLimit?: boolean): Promise<number> {
-    let count = 0;
-    for await (const _ of this.findGenerator()) {
-      count++;
-    }
-    return count;
+  [symbolSubscribable](signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+    return this.subscribable(signal);
   }
-  async fetchAsync(): Promise<Tdoc[]> {
-    return await Array.fromAsync(this);
-  }
-  async forEachAsync(callback: (doc: Tdoc, index: number, cursor: Cursor<Tdoc>) => void, thisArg?: any): Promise<void> {
-    let idx = 0;
-    for await (const doc of this) {
-      callback.call(thisArg, doc, idx++, this);
-    }
-  }
-  async mapAsync<M>(callback: (doc: Tdoc, index: number, cursor: Cursor<Tdoc>) => M, thisArg?: any): Promise<M[]> {
-    const items = await this.fetchAsync();
-    return items.map((doc, idx) => callback.call(thisArg, doc, idx, this));
-  }
-  observeAsync(callbacks: ObserveCallbacks<Tdoc>): Promise<ObserverHandle<Tdoc>> {
+
+  override observeAsync(
+    _callbacks: ObserveCallbacks<Tdoc>,
+  ): Promise<ObserverHandle<Tdoc>> {
     throw new Error("Method 'observeAsync' not implemented.");
   }
-  observeChangesAsync(callbacks: ObserveChangesCallbacks<Tdoc>, options?: { nonMutatingCallbacks?: boolean | undefined; }): Promise<ObserverHandle<Tdoc>> {
+  override observeChangesAsync(
+    _callbacks: ObserveChangesCallbacks<Tdoc>,
+    _options?: {
+      nonMutatingCallbacks?: boolean | undefined;
+    },
+  ): Promise<ObserverHandle<Tdoc>> {
     throw new Error("Method 'observeChangesAsync' not implemented.");
   }
-  [Symbol.asyncIterator](): AsyncIterator<Tdoc> {
-    return this.findGenerator();
-  }
-
-  // sync API not available for this async storage
-  count(): number {
-    throw new Error("Method 'count' not implemented.");
-  }
-  fetch(): Tdoc[] {
-    throw new Error("Method 'fetch' not implemented.");
-  }
-  forEach(): void {
-    throw new Error("Method 'forEach' not implemented.");
-  }
-  map<M>(): M[] {
-    throw new Error("Method 'map' not implemented.");
-  }
-  observe(): ObserverHandle<Tdoc> {
-    throw new Error("Method 'observe' not implemented.");
-  }
-  observeChanges(): ObserverHandle<Tdoc> {
-    throw new Error("Method 'observeChanges' not implemented.");
-  }
-  [Symbol.iterator](): Iterator<Tdoc> {
-    throw new Error("Method 'iterator' not implemented.");
-  }
 }
-
-// export const kvCollectionFactory: CollectionFactory = {}

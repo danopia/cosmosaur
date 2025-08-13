@@ -1,10 +1,11 @@
-import type { Db as DriverDb, Collection as DriverCollection, FindCursor as DriverCursor } from "mongodb";
+import type { Db as DriverDb, Collection as DriverCollection, FindCursor as DriverCursor, ChangeStream, ChangeStreamDocument } from "mongodb";
 
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
 import { getRandomStream, type Database } from "@danopia/cosmosaur-server/registry";
-import { Subscribable, SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+import { AsyncStorageCursor } from "./async-base.ts";
 
-// TODO: use KvRealtimeContext (originally from dist-app-deno) to provide actual events
+type DriverWatcher = ChangeStream<DriverDoc, ChangeStreamDocument<DriverDoc>>;
 
 export class MongoStorageDatabase implements Database {
   constructor(
@@ -34,8 +35,10 @@ export class MongoStorageCollection<Tdoc extends HasId> implements Collection<Td
     private readonly name: string,
   ) {
     this.dbCollection = dbClient.collection(name);
+    this.dbWatcher = this.dbCollection.watch();
   }
   private readonly dbCollection: DriverCollection<DriverDoc>;
+  private readonly dbWatcher: DriverWatcher;
 
   // async *#findGenerator(selector: Record<string,unknown>, opts: FindOpts): AsyncGenerator<Tdoc> {
   //   this.dbCollection.find()
@@ -77,6 +80,7 @@ export class MongoStorageCollection<Tdoc extends HasId> implements Collection<Td
   find(selector: Record<string, unknown> = {}, opts: FindOpts = {}): Cursor<Tdoc> {
     return new MongoStorageCursor(
       this.dbCollection,
+      this.dbWatcher,
       selector,
       opts,
     );
@@ -87,11 +91,11 @@ export class MongoStorageCollection<Tdoc extends HasId> implements Collection<Td
   }
   async insertAsync(doc: OptionalId<Tdoc>, callback?: (err: null, newId: string) => void): Promise<string> {
     const random = getRandomStream(`/collection/${this.name}`);
-    const newId = doc._id ?? random.id();
+    const newId: string = doc._id ?? random.id();
     const result = await this.dbCollection.insertOne({
-        ...doc,
-        _id: newId,
-      });
+      ...doc,
+      _id: newId,
+    });
     if (!result.acknowledged) throw new Error(
       `Document insert was not acknowledged`); // TODO: not sure when this would happen
     callback?.(null, newId);
@@ -152,69 +156,92 @@ export class MongoStorageCollection<Tdoc extends HasId> implements Collection<Td
   // }>{}
 }
 
-class MongoStorageCursor<Tdoc extends HasId> implements Cursor<Tdoc>, Iterable<Tdoc>, Subscribable {
+async function* listAndWatch(
+  collection: string,
+  cursor: MongoStorageCursor<HasId>,
+  watcher: DriverWatcher,
+  signal: AbortSignal,
+): AsyncGenerator<SubscriptionEvent> {
+  const watcherPipe = new TransformStream<ChangeStreamDocument<DriverDoc>,ChangeStreamDocument<DriverDoc>>();
+  const watcherWriter = watcherPipe.writable.getWriter();
+  const writeChange = watcherWriter.write.bind(watcherWriter);
+  watcher.on('change', writeChange);
+  signal.addEventListener('abort', () => {
+  // using _ = {[Symbol.dispose]: () => {
+    console.log('listAndWatch abort');
+    watcher.off('change', writeChange);
+    watcherWriter.close();
+  });
+
+  for await (const {_id, ...fields} of cursor) {
+    yield {
+      collection,
+      msg: 'added',
+      id: _id,
+      fields: fields as DocumentFields,
+    };
+  }
+  yield {
+    msg: 'ready',
+  };
+
+  for await (const change of watcherPipe.readable) {
+    if (change.operationType == 'insert') {
+      const {_id, ...fields} = change.fullDocument
+      yield {
+        collection,
+        msg: 'added',
+        id: _id,
+        fields: fields as DocumentFields,
+      };
+    } else if (change.operationType == 'delete') {
+      yield {
+        collection,
+        msg: 'removed',
+        id: change.documentKey._id,
+      };
+    }
+  }
+}
+
+class MongoStorageCursor<Tdoc extends HasId> extends AsyncStorageCursor<Tdoc> implements Cursor<Tdoc>, Iterable<Tdoc>, Subscribable {
 
   constructor(
     private readonly driverCollection: DriverCollection<Record<string, unknown> & {_id: string}>,
+    private readonly driverWatcher: DriverWatcher,
     private readonly selector: Record<string, unknown> = {},
     private readonly opts: FindOpts = {},
   ) {
-    this.driverCursor = driverCollection.find(selector, {
+    const driverCursor = driverCollection.find(selector, {
       projection: opts.fields,
     });
+    super(() => driverCursor[Symbol.asyncIterator]() as AsyncGenerator<Tdoc>);
+    // this.driverCursor = driverCursor;
   }
-  private readonly driverCursor: DriverCursor<DriverDoc>;
+  // private readonly driverCursor: DriverCursor<DriverDoc>;
 
-  [symbolSubscribable](): ReadableStream<SubscriptionEvent> {
-    // return this.subscribable();
-    throw new Error(`subscribing not implemented`);
+  [symbolSubscribable](signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+    // const listener = this.driverCollection.watch();
+    return ReadableStream.from<SubscriptionEvent>(
+      listAndWatch(this.driverCollection.collectionName, this, this.driverWatcher, signal));
   }
 
-  async countAsync(applySkipLimit?: boolean): Promise<number> {
+  // Optimize count function to use server-side counting:
+  override async countAsync(applySkipLimit?: boolean): Promise<number> {
     return await this.driverCollection.countDocuments(this.selector, applySkipLimit ? {/*TODO*/} : {});
   }
-  async fetchAsync(): Promise<Tdoc[]> {
-    return await this.driverCursor.toArray() as Tdoc[];
-  }
-  async forEachAsync(callback: (doc: Tdoc, index: number, cursor: Cursor<Tdoc>) => void, thisArg?: any): Promise<void> {
-    let idx = 0;
-    for await (const doc of this) {
-      callback.call(thisArg, doc, idx++, this);
-    }
-  }
-  async mapAsync<M>(callback: (doc: Tdoc, index: number, cursor: Cursor<Tdoc>) => M, thisArg?: any): Promise<M[]> {
-    const items = await this.fetchAsync();
-    return items.map((doc, idx) => callback.call(thisArg, doc, idx, this));
-  }
-  observeAsync(callbacks: ObserveCallbacks<Tdoc>): Promise<ObserverHandle<Tdoc>> {
+
+  override observeAsync(
+    _callbacks: ObserveCallbacks<Tdoc>,
+  ): Promise<ObserverHandle<Tdoc>> {
     throw new Error("Method 'observeAsync' not implemented.");
   }
-  observeChangesAsync(callbacks: ObserveChangesCallbacks<Tdoc>, options?: { nonMutatingCallbacks?: boolean | undefined; }): Promise<ObserverHandle<Tdoc>> {
+  override observeChangesAsync(
+    _callbacks: ObserveChangesCallbacks<Tdoc>,
+    _options?: {
+      nonMutatingCallbacks?: boolean | undefined;
+    },
+  ): Promise<ObserverHandle<Tdoc>> {
     throw new Error("Method 'observeChangesAsync' not implemented.");
-  }
-  [Symbol.asyncIterator](): AsyncIterator<Tdoc> {
-    return this.driverCursor[Symbol.asyncIterator]() as AsyncIterator<Tdoc>;
-  }
-
-  count(): number {
-    throw new Error("Method 'count' not implemented.");
-  }
-  fetch(): Tdoc[] {
-    throw new Error("Method 'fetch' not implemented.");
-  }
-  forEach(): void {
-    throw new Error("Method 'forEach' not implemented.");
-  }
-  map<M>(): M[] {
-    throw new Error("Method 'map' not implemented.");
-  }
-  observe(): ObserverHandle<Tdoc> {
-    throw new Error("Method 'observe' not implemented.");
-  }
-  observeChanges(): ObserverHandle<Tdoc> {
-    throw new Error("Method 'observeChanges' not implemented.");
-  }
-  [Symbol.iterator](): Iterator<Tdoc> {
-    throw new Error("Method 'iterator' not implemented.");
   }
 }

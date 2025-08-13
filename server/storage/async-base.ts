@@ -1,5 +1,4 @@
-import { Cursor, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
-import { Subscribable, SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+import type { Cursor, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
 
 export abstract class AsyncStorageCursor<Tdoc extends HasId> implements Cursor<Tdoc>, Iterable<Tdoc> {
 

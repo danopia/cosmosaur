@@ -29,7 +29,10 @@
       "integrity": "a678c8cac0853b6097ad0291274a60baa185a377cb9c34fc2340836c58644345"
     },
     "@dist-app/stdlib@0.1.7": {
-      "integrity": "7de727bda540bd718e1a53fa35744ac0b9e97ed6df69d624a0bd01849b324617"
+      "integrity": "7de727bda540bd718e1a53fa35744ac0b9e97ed6df69d624a0bd01849b324617",
+      "dependencies": [
+        "jsr:@cloudydeno/ejson"
+      ]
     },
     "@std/encoding@1.0.9": {
       "integrity": "025b8f18eb1749bc30d1353bf48b77d1eb5e35610220fa226f5a046b9240c5d7"

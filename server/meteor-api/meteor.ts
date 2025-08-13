@@ -70,7 +70,7 @@ export const Meteor: typeof types.Meteor = {
         });
         return pipe.readable;
       } else if (isSubscribable(item)) {
-        return item[symbolSubscribable]();
+        return item[symbolSubscribable](signal);
       } else {
         throw new Error(`Publication returned non-cursor: ${(item as Object).constructor.name ?? item}`);
       }

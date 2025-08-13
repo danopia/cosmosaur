@@ -10,7 +10,7 @@ export type Publishable =
 
 export const symbolSubscribable = Symbol.for('cosmosaur.v1alpha1.Subscribable');
 export type Subscribable = {
-  [symbolSubscribable]: () => ReadableStream<SubscriptionEvent>;
+  [symbolSubscribable]: (signal: AbortSignal) => ReadableStream<SubscriptionEvent>;
 };
 export function isSubscribable(given: unknown): given is Subscribable {
   if (!given) return false;
