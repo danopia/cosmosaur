@@ -1,7 +1,7 @@
-import { type Document, type IndexSpecification, type CreateIndexesOptions, type CountDocumentsOptions, type EstimatedDocumentCountOptions, type Db, Collection } from "mongodb";
 import type * as types from '../../shared/meteor-types/mongo.d.ts';
 import { getDatabase } from "@danopia/cosmosaur-server/registry";
 import { AnonymousCollection } from "@cloudydeno/ddp/livedata/collections/anonymous.ts";
+import { HasId, Collection } from "@cloudydeno/ddp/livedata/types.ts";
 // import { EntityHandle, ApiKindEntity } from "jsr:@dist-app/stdlib@0.1.5/engine/types";
 // import sift from "https://esm.sh/sift@17.1.3";
 
@@ -241,24 +241,28 @@ import { AnonymousCollection } from "@cloudydeno/ddp/livedata/collections/anonym
 // //   }
 // }
 
-export const Mongo/*: typeof types.Mongo*/ = {
-
-  Collection: class MongoCollectionRedirector {
-    constructor(name?: string | null) {
-      if (!name) {
-        const anonColl = new AnonymousCollection();
-        return anonColl.getApi();
-      }
-      const database = getDatabase();
-      if (!database) throw new Error(`No Database is registered`);
-      return database.newCollection(name);
+class MongoCollectionRedirector {
+  constructor(name?: string | null) {
+    if (!name) {
+      const anonColl = new AnonymousCollection();
+      return anonColl.getApi();
     }
-    static getCollection(name: string) {
-      const database = getDatabase();
-      if (!database) throw new Error(`No Database is registered`);
-      return database.getCollection(name);
-    }
+    const database = getDatabase();
+    if (!database) throw new Error(`No Database is registered`);
+    return database.newCollection(name);
   }
+  static getCollection(name: string): Collection<HasId> | null {
+    const database = getDatabase();
+    if (!database) throw new Error(`No Database is registered`);
+    return database.getCollection(name);
+  }
+}
+
+export const Mongo: {
+    Collection: typeof MongoCollectionRedirector;
+}/*: typeof types.Mongo*/ = {
+
+  Collection: MongoCollectionRedirector,
 
   // get Collection(): CollectionFactory {
   //   const inst = getCollectionFactory();

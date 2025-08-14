@@ -34,7 +34,7 @@ const InterfaceStorage = bySymbols[symbolInterface] ??= new AsyncLocalStorage;
 export function getInterface(): Backend {
   return InterfaceStorage.getStore() ?? defaultInterface;
 }
-export const withInterface = InterfaceStorage.run.bind(InterfaceStorage);
+export const withInterface: <R>(store: Backend, callback: () => R) => R = InterfaceStorage.run.bind(InterfaceStorage);
 
 /*
  * The DDP session of the current call, for accessing connection metadata
@@ -45,22 +45,22 @@ const SessionStorage = bySymbols[symbolSession] ??= new AsyncLocalStorage;
 export function getSession(): DdpSession | null {
   return SessionStorage.getStore() ?? null;
 }
-export const withSession = SessionStorage.run.bind(SessionStorage);
+export const withSession: <R>(store: DdpSession, callback: () => R) => R = SessionStorage.run.bind(SessionStorage);
 
 /*
  * Seeded random for the current method call, if provided by the client
  */
 const symbolRandom = Symbol.for('cosmosaur.v1alpha1.Random');
 const RandomStorage = bySymbols[symbolRandom] ??= new AsyncLocalStorage;
-export function getRandom() {
-  return RandomStorage.getStore();
+export function getRandom(): RandomStream | null {
+  return RandomStorage.getStore() ?? null;
 }
-export function getRandomStream(name: string) {
+export function getRandomStream(name: string): Random {
   const random = getRandom();
   if (random) return random.getStream(name);
   return new Random();
 }
-export const withRandom = RandomStorage.run.bind(RandomStorage);
+export const withRandom: <R>(store: RandomStream | null, callback: () => R) => R = RandomStorage.run.bind(RandomStorage);
 
 /*
  * The backing database context. Typically a backend database on servers and a DDP client on clients.
@@ -73,8 +73,8 @@ export type Database = {
 
 const symbolDatabase = Symbol.for('cosmosaur.v1alpha1.Database');
 const DatabaseStorage = bySymbols[symbolDatabase] ??= new AsyncLocalStorage;
-export function getDatabase() {
-  return DatabaseStorage.getStore();
+export function getDatabase(): Database | null {
+  return DatabaseStorage.getStore() ?? null;
 }
-export const withDatabase = DatabaseStorage.run.bind(DatabaseStorage);
-export const setDatabase = DatabaseStorage.enterWith.bind(DatabaseStorage);
+export const withDatabase: <R>(store: Database, callback: () => R) => R  = DatabaseStorage.run.bind(DatabaseStorage);
+export const setDatabase: (store: Database) => void = DatabaseStorage.enterWith.bind(DatabaseStorage);
