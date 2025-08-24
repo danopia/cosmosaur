@@ -2,6 +2,11 @@
   "name": "@danopia/cosmosaur-server",
   "version": "0.1.0",
   "license": "MIT",
+  "tasks": {
+    "testbed-links-preload": "deno run --unstable-kv --allow-net=:8000 --preload=./server/preload.ts testbed/links-demo/server/main.ts --storage=deno-kv",
+    "testbed-links-launch": "deno serve --watch --unstable-kv --allow-net=:8000 --allow-read=. ./server/launch.ts testbed/links-demo/server/main.ts --storage=deno-kv"
+    "testbed-links-run": "deno serve --watch --unstable-kv --allow-net=:8000 --allow-read=. ./server/launch.ts testbed/links-demo/server/main.ts --storage=deno-kv"
+  },
   "imports": {
     "meteor/meteor": "./server/meteor-api/meteor.ts",
     "meteor/mongo": "./server/meteor-api/mongo.ts",
@@ -21,10 +26,17 @@
     "./meteor-types/ejson": "./shared/meteor-types/ejson.d.ts",
     "./meteor-types/meteor": "./shared/meteor-types/meteor.d.ts",
     "./meteor-types/mongo": "./shared/meteor-types/mongo.d.ts",
+    "./storage/driver/deno-kv": "./server/storage/impl-deno-kv.ts",
+    "./storage/driver/mongodb": "./server/storage/impl-deno-kv.ts",
+    "./storage/auto": "./server/storage/detection.ts",
+    "./preload": "./server/preload.ts",
     "./build-html": "./server/build-html.ts",
     "./publishable": "./server/publishable.ts",
     "./registry": "./server/registry.ts"
   },
+  "workspace": [
+    "testbed/links-demo"
+  ],
   "nodeModulesDir": "none",
   "exclude": [
     ".github",
@@ -33,7 +45,6 @@
     "testbed/links-demo",
     "package.json",
     "yarn.lock",
-    ".*",
     "client"
   ]
 }

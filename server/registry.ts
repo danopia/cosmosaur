@@ -8,9 +8,14 @@ import type { Collection, HasId } from '@cloudydeno/ddp/livedata/types.ts';
 // of the library won't introduce inconsistent state
 const bySymbols = globalThis as unknown as {
   [symbolInterface]?: AsyncLocalStorage<Backend>;
+  [symbolDefaultInterface]?: Backend;
+
   [symbolSession]?: AsyncLocalStorage<DdpSession>;
+
   [symbolRandom]?: AsyncLocalStorage<RandomStream | null>;
+
   [symbolDatabase]?: AsyncLocalStorage<Database>;
+  [symbolDefaultDatabase]?: Database;
 }
 
 /*
@@ -28,8 +33,10 @@ export function newInterface(): Backend {
   };
 }
 
+const symbolDefaultInterface = Symbol.for('cosmosaur.v1alpha1.DefaultInterface');
+const defaultInterface = bySymbols[symbolDefaultInterface] ??= newInterface();
+
 const symbolInterface = Symbol.for('cosmosaur.v1alpha1.Interface');
-const defaultInterface = newInterface();
 const InterfaceStorage = bySymbols[symbolInterface] ??= new AsyncLocalStorage;
 export function getInterface(): Backend {
   return InterfaceStorage.getStore() ?? defaultInterface;
@@ -71,10 +78,17 @@ export type Database = {
   getCollection<Tdoc extends HasId>(name: string): Collection<Tdoc> | null;
 };
 
+const symbolDefaultDatabase = Symbol.for('cosmosaur.v1alpha1.DefaultDatabase');
+
 const symbolDatabase = Symbol.for('cosmosaur.v1alpha1.Database');
 const DatabaseStorage = bySymbols[symbolDatabase] ??= new AsyncLocalStorage;
 export function getDatabase(): Database | null {
-  return DatabaseStorage.getStore() ?? null;
+  return DatabaseStorage.getStore() ?? bySymbols[symbolDefaultDatabase] ?? null;
 }
-export const withDatabase: <R>(store: Database, callback: () => R) => R  = DatabaseStorage.run.bind(DatabaseStorage);
-export const setDatabase: (store: Database) => void = DatabaseStorage.enterWith.bind(DatabaseStorage);
+export const withDatabase: <R>(store: Database, callback: () => R) => R = DatabaseStorage.run.bind(DatabaseStorage);
+// enterWith isn't very strong, it seems to leave after the block, so has limited usage
+// export const setDatabase: (store: Database) => void = DatabaseStorage.enterWith.bind(DatabaseStorage);
+export function setDefaultDatabase(database: Database) {
+  if (bySymbols[symbolDefaultDatabase]) throw new Error(`Replacing an existing default Database is possibly a mistake.`);
+  bySymbols[symbolDefaultDatabase] = database;
+}
