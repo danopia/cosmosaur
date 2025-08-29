@@ -1,51 +1,123 @@
+import type { PublicationHandler } from '@cloudydeno/ddp/server';
 import type * as types from '../../shared/meteor-types/meteor.d.ts';
 import { MeteorError, MeteorTypedError } from "../../shared/various-api.ts";
-import { CollectionDriverStorage, Defaults, socketContexts } from "./_registry.ts";
-import { SubscriptionEvent, emitToSub } from '../ddp/livedata.ts';
+import { getInterface, withRandom, withSession } from '../registry.ts';
+import type { EJSONableProperty } from '../../shared/meteor-types/ejson.d.ts';
+import { emitToSub } from '@dist-app/stdlib/ddp/server/livedata';
+import { isObservableCursor, isSubscribable, type ObservableCursor, type Publishable, type Subscribable, type SubscriptionEvent, symbolSubscribable } from '../publishable.ts';
 
 export const Meteor: typeof types.Meteor = {
 
   // DDP
   methods(methods) {
+    const iface = getInterface().ddpInterface;
     for (const [name, impl] of Object.entries(methods)) {
-      Defaults.ddpInterface.addMethod(name, impl);
+      iface.addMethod(name, async (socket, params, random) => {
+        const result = await withSession(socket, () =>
+          withRandom(random, () =>
+            impl.apply({
+              connection: socket,
+              isSimulation: false,
+              userId: null,
+              unblock: () => "TODO",
+              setUserId: () => "TODO",
+            }, params)));
+        console.log('method', name, 'result:', result);
+        return result;
+      });
     }
   },
-  publish(name, handler) {
-    Defaults.ddpInterface.addPublication(name, async (sub, params) => {
-      const context = socketContexts.get(sub.connection);
-      if (!context) throw new Error(`missing socket context`);
-      const result = await CollectionDriverStorage.run(context.collectionDriver, () => handler.apply(sub, params));
-      // console.log('publish', name, 'result:', result);
 
-      const items = Array.isArray(result) ? result : result ? [result] : [];
-      // async function publishItem(item: CollectionQuery<unknown>) {
-      const outStreams = new Array<ReadableStream<SubscriptionEvent>>;
-      for (const item of items) {
-        // if (item instanceof CollectionQuery) {
-        //   const stream = context.collectionDriver.find()
-        //   outStreams.push(
-        //     renderEventStream(
-        //       filterEventStream(stream, entity => item.filters.every(filter => filter({
-        //         ...(entity.spec as Record<string,unknown>),
-        //         _id: entity.metadata.name,
-        //       }))),
-        //       item.collectionName,
-        //       (x) => x._id,
-        //       ({_id, ...rest}) => rest,
-        //     ));
-        //   continue;
-        // }
-        throw new Error(`published weird thing`);
-      }
-
-      if (outStreams.length == 0) {
-        // Publishing nothing, e.g. immediately ready
-        sub.ready();
+  publish(
+    name: string | null,
+    impl: (
+      this: types.Subscription,
+      ...args: EJSONableProperty[]
+    ) => void | Publishable | Promise<void | Publishable>
+  ) {
+    const iface = getInterface().ddpInterface;
+    function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+      if (isObservableCursor(item)) {
+        const pipe = new TransformStream<SubscriptionEvent>;
+        const writer = pipe.writable.getWriter();
+        if (!item._getCollectionName) {
+          throw new Error(`item._getCollectionName is missing`);
+        }
+        const collection = item._getCollectionName();
+        const observer = item.observeChanges({
+          added(id, fields) {
+            writer.write({
+              msg: 'added',
+              collection, id, fields,
+            });
+          },
+          changed(id, fields) {
+            writer.write({
+              msg: 'changed',
+              collection, id, fields,
+            });
+          },
+          removed(id) {
+            writer.write({
+              msg: 'removed',
+              collection, id,
+            });
+          },
+        }, { signal: signal });
+        signal.addEventListener('abort', () => {
+          observer.stop();
+          writer.close();
+        });
+        return pipe.readable;
+      } else if (isSubscribable(item)) {
+        return item[symbolSubscribable](signal);
       } else {
-        emitToSub(sub, outStreams);
+        throw new Error(`Publication returned non-cursor: ${(item as Object).constructor.name ?? item}`);
       }
-    });
+
+      // if (item instanceof CollectionQuery) {
+      //   const stream = context.collectionDriver.find()
+      //   outStreams.push(
+      //     renderEventStream(
+      //       filterEventStream(stream, entity => item.filters.every(filter => filter({
+      //         ...(entity.spec as Record<string,unknown>),
+      //         _id: entity.metadata.name,
+      //       }))),
+      //       item.collectionName,
+      //       (x) => x._id,
+      //       ({_id, ...rest}) => rest,
+      //     ));
+      //   continue;
+      // }
+      // throw new Error(`published weird thing`);
+    }
+    const handler: PublicationHandler = async (sub, params) => {
+      try {
+        // const context = socketContexts.get(sub.connection);
+        // if (!context) throw new Error(`missing socket context`);
+        // const result = await CollectionDriverStorage.run(context.collectionDriver, () => impl.apply(sub, params));
+        const result = await withSession(sub.connection, () => impl.apply(sub, params));
+        // console.log('publish', name, 'result:', result);
+
+        const items = Array.isArray(result) ? result : result ? [result] : [];
+        const outStreams = items.map(item => subscribeTo(item, sub.signal));
+
+        if (outStreams.length == 0) {
+          // Publishing nothing, e.g. immediately ready
+          // TODO: manually implemented publications, e.g. calling .added() instead of returning a cursor
+          sub.ready();
+        } else {
+          emitToSub(sub, outStreams);
+        }
+      } catch (err) {
+        console.error(`Publication ${JSON.stringify(name)} sub crashed:`, err);
+      }
+    };
+    if (name == null) {
+      iface.addDefaultPublication(impl.name, handler);
+    } else {
+      iface.addPublication(name, handler);
+    }
   },
   // subscribe: undefined,
   // call: undefined,
@@ -55,7 +127,11 @@ export const Meteor: typeof types.Meteor = {
   // reconnect: undefined,
   // disconnect: undefined,
   // status: undefined,
-  // onConnection: undefined,
+
+  onConnection(cb) {
+    const iface = getInterface().ddpInterface;
+    iface.onConnection(cb);
+  },
 
   // makeErrorType: undefined,
   // user: undefined,
@@ -66,7 +142,9 @@ export const Meteor: typeof types.Meteor = {
   clearInterval: undefined,
   clearTimeout: undefined,
   defer: undefined,
-  // startup: undefined,
+  startup(func: () => void | Promise<void>) {
+    getInterface().startupFuncs.push(func);
+  },
   // wrapAsync: undefined,
   // bindEnvironment: undefined,
 
@@ -142,11 +220,3 @@ export const Meteor: typeof types.Meteor = {
 // export const Meteor = {
 
 // }
-
-
-// // TODO: replace with exports from /ddp/server/livedata
-// type SubscriptionEvent =
-// | (ServerSentPacket & {msg: 'added' | 'changed' | 'removed'})
-// | {msg: 'ready'}
-// | {msg: 'nosub', error?: Error}
-// ;

@@ -14,9 +14,13 @@
   },
   "author": "",
   "license": "MIT",
-  "packageManager": "yarn@4.9.1",
+  "packageManager": "yarn@4.9.2",
   "devDependencies": {
     "mongodb": "^6.16.0",
     "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@cloudydeno/ddp": "jsr:^0.1.5",
+    "@cloudydeno/ejson": "jsr:^0.1.1"
   }
 }
