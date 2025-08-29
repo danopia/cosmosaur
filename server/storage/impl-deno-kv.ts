@@ -1,5 +1,4 @@
-// import {sift} from "npm:sift";
-import sift from "https://esm.sh/sift@17.1.3";
+import sift from "sift";
 
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
 import { getRandomStream, type Database } from "@danopia/cosmosaur-server/registry";
@@ -38,7 +37,7 @@ export class KvDocCollection<Tdoc extends HasId> implements Collection<Tdoc> {
   ) {}
 
   async *#findGenerator(selector: Record<string,unknown>, opts: FindOpts): AsyncGenerator<Tdoc> {
-    const siftFunc = sift(selector);
+    const siftFunc = sift.default(selector);
     // if (opts.sort) throw new Error(`TODO: find sorting`);
     for await (const doc of this.kv.list({
       prefix: [...this.prefix, 'coll', this.name, 'docs'],
@@ -60,6 +59,7 @@ export class KvDocCollection<Tdoc extends HasId> implements Collection<Tdoc> {
         fields: fields as DocumentFields,
       };
     }
+    signal.throwIfAborted();
     yield {
       msg: 'ready',
     };
