@@ -27,6 +27,8 @@ jobs:
       fail-fast: false # run each branch to completion
 
     steps:
+    - run: corepack enable
+
     - name: Checkout source
       uses: actions/checkout@v4
 
@@ -71,6 +73,8 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
+    - run: corepack enable
+
     - uses: actions/checkout@v4
 
     - name: Publish now
