@@ -1,8 +1,8 @@
 import sift from "sift";
-
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
-import { getRandomStream, type Database } from "@danopia/cosmosaur-server/registry";
-import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+
+import { getRandomStream, type Database } from "../registry.ts";
+import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "../publishable.ts";
 import { AsyncStorageCursor } from "./async-base.ts";
 
 // TODO: use KvRealtimeContext (originally from dist-app-deno) to provide actual events

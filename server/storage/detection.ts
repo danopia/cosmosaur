@@ -1,4 +1,4 @@
-import type { Database } from "@danopia/cosmosaur-server/registry";
+import type { Database } from "../registry.ts";
 
 async function denoKvDetection(required: boolean) {
   if (required && !Deno.openKv) throw new Error(

@@ -1,8 +1,8 @@
 import type { Db as DriverDb, Collection as DriverCollection, FindCursor as DriverCursor, ChangeStream, ChangeStreamDocument } from "mongodb";
-
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
-import { getRandomStream, type Database } from "@danopia/cosmosaur-server/registry";
-import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "@danopia/cosmosaur-server/publishable";
+
+import { getRandomStream, type Database } from "../registry.ts";
+import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "../publishable.ts";
 import { AsyncStorageCursor } from "./async-base.ts";
 
 type DriverWatcher = ChangeStream<DriverDoc, ChangeStreamDocument<DriverDoc>>;

@@ -1,7 +1,7 @@
 import { serveWebsocket } from "@cloudydeno/ddp/server";
 
-import { getInterface, setDefaultDatabase } from "@danopia/cosmosaur-server/registry";
-import { openAutomaticDatabase } from "@danopia/cosmosaur-server/storage/auto";
+import { getInterface, setDefaultDatabase } from "./registry.ts";
+import { openAutomaticDatabase } from "./storage/detection.ts";
 
 console.debug('Loading server database...');
 setDefaultDatabase(await openAutomaticDatabase());
