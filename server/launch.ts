@@ -24,4 +24,4 @@ export default {
 
     return new Response('', { status: 404 });
   },
-} satisfies Deno.ServeDefaultExport;
+} as Deno.ServeDefaultExport;
