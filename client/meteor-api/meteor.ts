@@ -1,6 +1,7 @@
 import type { DdpConnection } from "@cloudydeno/ddp/client";
-import { MeteorError, MeteorTypedError } from '../../shared/various-api.ts';
 import { EJSONableProperty } from "@cloudydeno/ejson";
+
+import { MeteorError, MeteorTypedError } from '../../shared/various-api.ts';
 
 export class MeteorApi {
 

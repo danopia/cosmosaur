@@ -79,3 +79,5 @@ jobs:
 
     - name: Publish now
       run: yarn npm publish --tolerate-republish
+      env:
+        YARN_NPM_AUTH_TOKEN: ${{ secrets.YARN_NPM_AUTH_TOKEN }}
