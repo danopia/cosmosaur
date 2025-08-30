@@ -27,15 +27,20 @@ jobs:
       fail-fast: false # run each branch to completion
 
     steps:
-    - run: corepack enable
+    - uses: actions/checkout@v4
 
-    - name: Checkout source
-      uses: actions/checkout@v4
+    - run: corepack enable
+    - uses: actions/setup-node@v4
+      with:
+        cache: yarn
 
     - name: Use Deno ${{ matrix.deno-version }}
       uses: denoland/setup-deno@v2
       with:
+        cache: true
         deno-version: ${{ matrix.deno-version }}
+
+    - run: yarn install --immutable
 
     - name: Check NPM publication
       run: time npm publish --dry-run
@@ -56,9 +61,11 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-    - uses: denoland/setup-deno@v2
-
     - uses: actions/checkout@v4
+
+    - uses: denoland/setup-deno@v2
+      with:
+        cache: true
 
     - name: Publish now
       run: deno publish
@@ -73,9 +80,14 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-    - run: corepack enable
-
     - uses: actions/checkout@v4
+
+    - run: corepack enable
+    - uses: actions/setup-node@v4
+      with:
+        cache: yarn
+
+    - run: yarn install --immutable
 
     - name: Publish now
       run: yarn npm publish --tolerate-republish
