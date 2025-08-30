@@ -4,8 +4,14 @@ A collection of packages to replicate MeteorJS APIs on browsers and on Deno serv
 
 ### `@danopia/cosmosaur-client` on NPM
 
-Use this in your frontend bundle. Sets up a DDP connection and lets you subscribe to collections.
+https://npmjs.org/package/@danopia/cosmosaur-client
+
+Use this in your frontend bundle or CLI utility.
+Sets up a DDP connection and lets you subscribe to collections.
 
 ### `@danopia/cosmosaur-server` on JSR
 
-Run a Meteor-like realtime websocket server for your app. Backed by Deno KV or MongoDB.
+https://jsr.io/@danopia/cosmosaur-server
+
+Run a Meteor-like DDP websocket server for your app.
+Backed by Deno KV or MongoDB.
