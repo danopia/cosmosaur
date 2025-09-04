@@ -31,6 +31,8 @@ Meteor.startup(async () => {
       title: 'Discussions',
       url: 'https://forums.meteor.com',
     });
+
+    console.log('Inserted initial Links.');
   }
 
   // We publish the entire Links collection to all clients.

@@ -1,11 +1,11 @@
 {
   "name": "@danopia/cosmosaur-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "tasks": {
     "testbed-links-preload": "deno run --unstable-kv --allow-net=:8000 --preload=./server/preload.ts testbed/links-demo/server/main.ts --storage=deno-kv",
     "testbed-links-launch": "deno serve --watch --unstable-kv --allow-net=:8000 --allow-read=. ./server/launch.ts testbed/links-demo/server/main.ts --storage=deno-kv",
-    "testbed-links-run": "deno serve --watch --unstable-kv --allow-net=:8000 --allow-read=. ./server/launch.ts testbed/links-demo/server/main.ts --storage=deno-kv"
+    "testbed-links-run": "deno run --watch --unstable-kv --allow-net=:8000 --allow-read=. ./testbed/links-entrypoint.ts --storage=deno-kv"
   },
   "imports": {
     "meteor/meteor": "./server/meteor-api/meteor.ts",
@@ -31,6 +31,7 @@
     "./storage/auto": "./server/storage/detection.ts",
     "./preload": "./server/preload.ts",
     "./launch": "./server/launch.ts",
+    "./harness": "./server/harness.ts",
     "./build-html": "./server/build-html.ts",
     "./publishable": "./server/publishable.ts",
     "./registry": "./server/registry.ts"

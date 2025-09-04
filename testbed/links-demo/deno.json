@@ -1,10 +1,10 @@
 {
-  "exports": {
-    "./server": "./server/main.ts"
+  "tasks": {
+    "serve-alt": "deno serve --watch --unstable-kv 'data:application/typescript;base64,aW1wb3J0ICogYXMgaGFybmVzcyBmcm9tICJAZGFub3BpYS9jb3Ntb3NhdXItc2VydmVyL2hhcm5lc3MiOwphd2FpdCBoYXJuZXNzLmNvbm5lY3REZWZhdWx0RGF0YWJhc2UoKTsKYXdhaXQgaW1wb3J0KCdzZXJ2ZXIvbWFpbi50cycpOwphd2FpdCBoYXJuZXNzLnJ1blN0YXJ0dXAoKTsKZXhwb3J0IGRlZmF1bHQgaGFybmVzcy5zZXJ2ZVZpYUV4cG9ydCgpOwo=' --storage=deno-kv",
+    "serve": "deno serve --watch --unstable-kv --allow-read 'data:application/typescript;base64,aW1wb3J0ICogYXMgaGFybmVzcyBmcm9tICJAZGFub3BpYS9jb3Ntb3NhdXItc2VydmVyL2hhcm5lc3MiOwphd2FpdCBoYXJuZXNzLmNvbm5lY3REZWZhdWx0RGF0YWJhc2UoKTsKYXdhaXQgaW1wb3J0KGBmaWxlOi8vJHtEZW5vLmN3ZCgpfS9zZXJ2ZXIvbWFpbi50c2ApOwphd2FpdCBoYXJuZXNzLnJ1blN0YXJ0dXAoKTsKZXhwb3J0IGRlZmF1bHQgaGFybmVzcy5zZXJ2ZVZpYUV4cG9ydCgpOwo=' --storage=deno-kv"
   },
   "imports": {
-    "meteor/meteor": "../../server/meteor-api/meteor.ts",
-    "meteor/mongo": "../../server/meteor-api/mongo.ts",
-    "meteor/check": "../../shared/meteor-api/check.ts"
+    "server/": "./server/",
+    "meteor/": "jsr:/@danopia/cosmosaur-server/meteor-api/"
   }
 }

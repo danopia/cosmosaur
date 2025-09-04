@@ -42,8 +42,6 @@ jobs:
 
     - run: yarn install --immutable
 
-    - name: Check NPM publication
-      run: time npm publish --dry-run
     - name: Check Yarn publication
       run: time yarn pack --dry-run
 
