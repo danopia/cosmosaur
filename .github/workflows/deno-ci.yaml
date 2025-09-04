@@ -27,7 +27,7 @@ jobs:
       fail-fast: false # run each branch to completion
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - run: corepack enable
     - uses: actions/setup-node@v4
@@ -59,7 +59,7 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - uses: denoland/setup-deno@v2
       with:
@@ -78,7 +78,7 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - run: corepack enable
     - uses: actions/setup-node@v4
