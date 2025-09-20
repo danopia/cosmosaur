@@ -1,6 +1,6 @@
 {
   "name": "@danopia/cosmosaur-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "tasks": {
     "testbed-links-preload": "deno run --unstable-kv --allow-net=:8000 --preload=./server/preload.ts testbed/links-demo/server/main.ts --storage=deno-kv",
@@ -11,12 +11,11 @@
     "meteor/meteor": "./server/meteor-api/meteor.ts",
     "meteor/mongo": "./server/meteor-api/mongo.ts",
     "meteor/check": "./shared/meteor-api/check.ts",
-    "@cloudydeno/ddp": "jsr:@cloudydeno/ddp@^0.1.5",
-    "@cloudydeno/ejson": "jsr:@cloudydeno/ejson@^0.1.1",
-    "@cloudydeno/opentelemetry": "jsr:@cloudydeno/opentelemetry@^0.10.3",
-    "@dist-app/stdlib": "jsr:@dist-app/stdlib@^0.1.7",
+    "@cloudydeno/ddp": "jsr:@cloudydeno/ddp@^0.1.9",
+    "@cloudydeno/ejson": "jsr:@cloudydeno/ejson@^0.1",
+    "@cloudydeno/opentelemetry": "jsr:@cloudydeno/opentelemetry@^0.11",
     "mongodb": "npm:mongodb@^6",
-    "sift": "npm:sift@^17.1.3"
+    "sift": "npm:sift@^17"
   },
   "exports": {
     "./meteor-api/meteor": "./server/meteor-api/meteor.ts",

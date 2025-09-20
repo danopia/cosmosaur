@@ -2,7 +2,12 @@ import sift from "sift";
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
 
 import { getRandomStream, type Database } from "../registry.ts";
-import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "../publishable.ts";
+import {
+  type PublicationEvent,
+  type PublishStream,
+  type Subscribable,
+  symbolSubscribable,
+} from "../publishable.ts";
 import { AsyncStorageCursor } from "./async-base.ts";
 
 // TODO: use KvRealtimeContext (originally from dist-app-deno) to provide actual events
@@ -49,7 +54,7 @@ export class KvDocCollection<Tdoc extends HasId> implements Collection<Tdoc> {
     }
   }
 
-  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts, signal: AbortSignal): AsyncGenerator<SubscriptionEvent> {
+  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts, signal: AbortSignal): AsyncGenerator<PublicationEvent> {
     // TODO: use a kv realtime system to manage emitting events
     for await (const {_id, ...fields} of this.#findGenerator(selector, opts)) {
       yield {
@@ -191,12 +196,12 @@ class KvDocCursor<Tdoc extends HasId> extends AsyncStorageCursor<Tdoc> implement
 
   constructor(
     findGenerator: () => AsyncGenerator<Tdoc>,
-    private readonly subscribable: (signal: AbortSignal) => ReadableStream<SubscriptionEvent>,
+    private readonly subscribable: (signal: AbortSignal) => PublishStream,
   ) {
     super(findGenerator);
   }
 
-  [symbolSubscribable](signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+  [symbolSubscribable](signal: AbortSignal): PublishStream {
     return this.subscribable(signal);
   }
 

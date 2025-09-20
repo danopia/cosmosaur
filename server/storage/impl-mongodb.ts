@@ -2,7 +2,12 @@ import type { Db as DriverDb, Collection as DriverCollection, FindCursor as Driv
 import type { Collection, Cursor, DocumentFields, FindOpts, HasId, ObserveCallbacks, ObserveChangesCallbacks, ObserverHandle } from "@cloudydeno/ddp/livedata/types.ts";
 
 import { getRandomStream, type Database } from "../registry.ts";
-import { type Subscribable, type SubscriptionEvent, symbolSubscribable } from "../publishable.ts";
+import {
+  type PublicationEvent,
+  type PublishStream,
+  type Subscribable,
+  symbolSubscribable,
+} from "../publishable.ts";
 import { AsyncStorageCursor } from "./async-base.ts";
 
 type DriverWatcher = ChangeStream<DriverDoc, ChangeStreamDocument<DriverDoc>>;
@@ -54,7 +59,7 @@ export class MongoStorageCollection<Tdoc extends HasId> implements Collection<Td
   //   }
   // }
 
-  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts): AsyncGenerator<SubscriptionEvent> {
+  async *#eventGenerator(selector: Record<string,unknown>, opts: FindOpts): AsyncGenerator<PublicationEvent> {
     // TODO: use a kv realtime system to manage emitting events
     for await (const {_id, ...fields} of this.find(selector, opts)) {
       yield {
@@ -161,7 +166,7 @@ async function* listAndWatch(
   cursor: MongoStorageCursor<HasId>,
   watcher: DriverWatcher,
   signal: AbortSignal,
-): AsyncGenerator<SubscriptionEvent> {
+): AsyncGenerator<PublicationEvent> {
   const watcherPipe = new TransformStream<ChangeStreamDocument<DriverDoc>,ChangeStreamDocument<DriverDoc>>();
   const watcherWriter = watcherPipe.writable.getWriter();
   const writeChange = watcherWriter.write.bind(watcherWriter);
@@ -220,9 +225,9 @@ class MongoStorageCursor<Tdoc extends HasId> extends AsyncStorageCursor<Tdoc> im
   }
   // private readonly driverCursor: DriverCursor<DriverDoc>;
 
-  [symbolSubscribable](signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+  [symbolSubscribable](signal: AbortSignal): PublishStream {
     // const listener = this.driverCollection.watch();
-    return ReadableStream.from<SubscriptionEvent>(
+    return ReadableStream.from<PublicationEvent>(
       listAndWatch(this.driverCollection.collectionName, this, this.driverWatcher, signal));
   }
 

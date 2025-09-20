@@ -1,6 +1,9 @@
-import type { ServerSentPacket } from "@dist-app/stdlib/ddp/types";
 import type { Meteor } from "../shared/meteor-types/meteor.d.ts";
+
 import type { ObserveChangesCallbacks } from "@cloudydeno/ddp/livedata/types.ts";
+import type { PublishStream, PublicationEvent } from "@cloudydeno/ddp/server";
+
+export type { PublishStream, PublicationEvent };
 
 export type Publishable =
   | Subscribable
@@ -10,7 +13,7 @@ export type Publishable =
 
 export const symbolSubscribable = Symbol.for('cosmosaur.v1alpha1.Subscribable');
 export type Subscribable = {
-  [symbolSubscribable]: (signal: AbortSignal) => ReadableStream<SubscriptionEvent>;
+  [symbolSubscribable]: (signal: AbortSignal) => PublishStream;
 };
 export function isSubscribable(given: unknown): given is Subscribable {
   if (!given) return false;
@@ -19,13 +22,6 @@ export function isSubscribable(given: unknown): given is Subscribable {
   if (typeof thing[symbolSubscribable] != 'function') return false;
   return true;
 }
-
-// TODO?: replace with exports from /ddp/server/livedata
-export type SubscriptionEvent =
-| (ServerSentPacket & {msg: 'added' | 'changed' | 'removed'})
-| {msg: 'ready'}
-| {msg: 'nosub', error?: Error}
-;
 
 // export type ObservableCursor<T> = Pick<typesMongo.Mongo.Cursor<T>, 'observeChangesAsync'>;
 export type ObservableCursor<T> = {

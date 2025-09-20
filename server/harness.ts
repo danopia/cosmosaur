@@ -18,7 +18,8 @@ export async function runStartup() {
 
 export function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo): Response {
   if (req.url.endsWith('/websocket')) {
-    return serveWebsocket(req, connInfo, getInterface().ddpInterface);
+    const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
+    return response;
   }
 
   return new Response('', { status: 404 });

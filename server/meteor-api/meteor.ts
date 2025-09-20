@@ -1,10 +1,9 @@
-import type { PublicationHandler } from '@cloudydeno/ddp/server';
+import type { PublicationHandler, PublishStream } from '@cloudydeno/ddp/server';
 import type * as types from '../../shared/meteor-types/meteor.d.ts';
 import { MeteorError, MeteorTypedError } from "../../shared/various-api.ts";
 import { getInterface, withRandom, withSession } from '../registry.ts';
 import type { EJSONableProperty } from '../../shared/meteor-types/ejson.d.ts';
-import { emitToSub } from '@dist-app/stdlib/ddp/server/livedata';
-import { isObservableCursor, isSubscribable, type ObservableCursor, type Publishable, type Subscribable, type SubscriptionEvent, symbolSubscribable } from '../publishable.ts';
+import { isObservableCursor, isSubscribable, type ObservableCursor, type Publishable, type Subscribable, type PublicationEvent, symbolSubscribable } from '../publishable.ts';
 
 export const Meteor: typeof types.Meteor = {
 
@@ -36,9 +35,9 @@ export const Meteor: typeof types.Meteor = {
     ) => void | Publishable | Promise<void | Publishable>
   ) {
     const iface = getInterface().ddpInterface;
-    function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): ReadableStream<SubscriptionEvent> {
+    function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): PublishStream {
       if (isObservableCursor(item)) {
-        const pipe = new TransformStream<SubscriptionEvent>;
+        const pipe = new TransformStream<PublicationEvent>;
         const writer = pipe.writable.getWriter();
         if (!item._getCollectionName) {
           throw new Error(`item._getCollectionName is missing`);
@@ -99,15 +98,10 @@ export const Meteor: typeof types.Meteor = {
         const result = await withSession(sub.connection, () => impl.apply(sub, params));
         // console.log('publish', name, 'result:', result);
 
-        const items = Array.isArray(result) ? result : result ? [result] : [];
-        const outStreams = items.map(item => subscribeTo(item, sub.signal));
-
-        if (outStreams.length == 0) {
-          // Publishing nothing, e.g. immediately ready
-          // TODO: manually implemented publications, e.g. calling .added() instead of returning a cursor
-          sub.ready();
-        } else {
-          emitToSub(sub, outStreams);
+        if (result) {
+          const items = Array.isArray(result) ? result : [result];
+          const outStreams = items.map<PublishStream>(item => subscribeTo(item, sub.signal));
+          return outStreams;
         }
       } catch (err) {
         console.error(`Publication ${JSON.stringify(name)} sub crashed:`, err);

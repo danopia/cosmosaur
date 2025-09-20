@@ -18,7 +18,8 @@ setTimeout(async () => {
   Deno.serve((req, connInfo) => {
 
     if (req.url.endsWith('/websocket')) {
-      return serveWebsocket(req, connInfo, getInterface().ddpInterface);
+      const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
+      return response;
     }
 
     return new Response('', { status: 404 });

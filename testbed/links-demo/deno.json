@@ -1,7 +1,8 @@
 {
   "tasks": {
+    "serve": "env DENO_NO_PACKAGE_JSON=1 deno serve --allow-read --allow-env --unstable-kv @danopia/cosmosaur-server/launch server/main.ts",
     "serve-alt": "deno serve --watch --unstable-kv 'data:application/typescript;base64,aW1wb3J0ICogYXMgaGFybmVzcyBmcm9tICJAZGFub3BpYS9jb3Ntb3NhdXItc2VydmVyL2hhcm5lc3MiOwphd2FpdCBoYXJuZXNzLmNvbm5lY3REZWZhdWx0RGF0YWJhc2UoKTsKYXdhaXQgaW1wb3J0KCdzZXJ2ZXIvbWFpbi50cycpOwphd2FpdCBoYXJuZXNzLnJ1blN0YXJ0dXAoKTsKZXhwb3J0IGRlZmF1bHQgaGFybmVzcy5zZXJ2ZVZpYUV4cG9ydCgpOwo=' --storage=deno-kv",
-    "serve": "deno serve --watch --unstable-kv --allow-read 'data:application/typescript;base64,aW1wb3J0ICogYXMgaGFybmVzcyBmcm9tICJAZGFub3BpYS9jb3Ntb3NhdXItc2VydmVyL2hhcm5lc3MiOwphd2FpdCBoYXJuZXNzLmNvbm5lY3REZWZhdWx0RGF0YWJhc2UoKTsKYXdhaXQgaW1wb3J0KGBmaWxlOi8vJHtEZW5vLmN3ZCgpfS9zZXJ2ZXIvbWFpbi50c2ApOwphd2FpdCBoYXJuZXNzLnJ1blN0YXJ0dXAoKTsKZXhwb3J0IGRlZmF1bHQgaGFybmVzcy5zZXJ2ZVZpYUV4cG9ydCgpOwo=' --storage=deno-kv"
+    "serve-alt2": "deno serve --watch --unstable-kv --allow-read 'data:application/typescript;base64,aW1wb3J0ICogYXMgaGFybmVzcyBmcm9tICJAZGFub3BpYS9jb3Ntb3NhdXItc2VydmVyL2hhcm5lc3MiOwphd2FpdCBoYXJuZXNzLmNvbm5lY3REZWZhdWx0RGF0YWJhc2UoKTsKYXdhaXQgaW1wb3J0KGBmaWxlOi8vJHtEZW5vLmN3ZCgpfS9zZXJ2ZXIvbWFpbi50c2ApOwphd2FpdCBoYXJuZXNzLnJ1blN0YXJ0dXAoKTsKZXhwb3J0IGRlZmF1bHQgaGFybmVzcy5zZXJ2ZVZpYUV4cG9ydCgpOwo=' --storage=deno-kv"
   },
   "imports": {
     "server/": "./server/",
