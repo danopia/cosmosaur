@@ -10,6 +10,8 @@ on:
 env:
   # Skip deno's tendency to grab deps from package.json
   DENO_NO_PACKAGE_JSON: '1'
+  # Apparent incompatibility with hardened mode and JSR deps
+  YARN_ENABLE_HARDENED_MODE: '0'
 
 jobs:
 
