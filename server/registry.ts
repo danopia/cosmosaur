@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 import { DdpInterface, type DdpSession } from "@cloudydeno/ddp/server";
 import { Random, type RandomStream } from '@cloudydeno/ddp/random';
-import type { Collection, HasId } from '@cloudydeno/ddp/livedata/types.ts';
+import type { HasId, PartialCollectionApi } from '@cloudydeno/ddp/livedata/types.ts';
 
 // Cache the async variable handles on globalThis so that multiple instances
 // of the library won't introduce inconsistent state
@@ -74,8 +74,8 @@ export const withRandom: <R>(store: RandomStream | null, callback: () => R) => R
  */
 
 export type Database = {
-  newCollection<Tdoc extends HasId>(name: string): Collection<Tdoc>;
-  getCollection<Tdoc extends HasId>(name: string): Collection<Tdoc> | null;
+  newCollection<Tdoc extends HasId>(name: string): PartialCollectionApi<Tdoc>;
+  getCollection<Tdoc extends HasId>(name: string): PartialCollectionApi<Tdoc> | null;
 };
 
 const symbolDefaultDatabase = Symbol.for('cosmosaur.v1alpha1.DefaultDatabase');

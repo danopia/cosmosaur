@@ -17,9 +17,9 @@ export const Meteor: typeof types.Meteor = {
             impl.apply({
               connection: socket,
               isSimulation: false,
-              userId: null,
+              userId: socket.userId,
               unblock: () => "TODO",
-              setUserId: () => "TODO",
+              setUserId: (userId: string | null) => socket.setUserId(userId),
             }, params)));
         console.log('method', name, 'result:', result);
         return result;
@@ -36,7 +36,9 @@ export const Meteor: typeof types.Meteor = {
   ) {
     const iface = getInterface().ddpInterface;
     function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): PublishStream {
-      if (isObservableCursor(item)) {
+      if (isSubscribable(item)) {
+        return item[symbolSubscribable](signal);
+      } else if (isObservableCursor(item)) {
         const pipe = new TransformStream<PublicationEvent>;
         const writer = pipe.writable.getWriter();
         if (!item._getCollectionName) {
@@ -68,10 +70,8 @@ export const Meteor: typeof types.Meteor = {
           writer.close();
         });
         return pipe.readable;
-      } else if (isSubscribable(item)) {
-        return item[symbolSubscribable](signal);
       } else {
-        throw new Error(`Publication returned non-cursor: ${(item as Object).constructor.name ?? item}`);
+        throw new Error(`Publication returned non-cursor: ${(item as object).constructor.name ?? item}`);
       }
 
       // if (item instanceof CollectionQuery) {

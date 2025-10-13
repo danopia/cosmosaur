@@ -1,16 +1,17 @@
 {
   "version": "5",
   "specifiers": {
-    "jsr:@cloudydeno/ddp@~0.1.9": "0.1.9",
+    "jsr:@cloudydeno/ddp@~0.2.0-beta.2": "0.2.0-beta.2",
     "jsr:@cloudydeno/ejson@0.1": "0.1.1",
     "jsr:@cloudydeno/opentelemetry@0.11": "0.11.0",
     "jsr:@std/encoding@1.0.9": "1.0.9",
+    "npm:@types/node@*": "24.2.0",
     "npm:mongodb@6": "6.18.0",
     "npm:sift@17": "17.1.3"
   },
   "jsr": {
-    "@cloudydeno/ddp@0.1.9": {
-      "integrity": "a8256fcc31623b5405cf511ce3cf94f7726b533b3313e207a628a5da50b76ded",
+    "@cloudydeno/ddp@0.2.0-beta.2": {
+      "integrity": "c36ac64ea0a321354a36ca548b0f8ee0cbbb7b9c89bc60988945a8c4fa0a9e6f",
       "dependencies": [
         "jsr:@cloudydeno/ejson",
         "jsr:@cloudydeno/opentelemetry"
@@ -34,6 +35,12 @@
       "integrity": "sha512-zlayKCsIjYb7/IdfqxorK5+xUMyi4vOKcFy10wKJYc63NSdKI8mNME+uJqfatkPmOSMMUiojrL58IePKBm3gvQ==",
       "dependencies": [
         "sparse-bitfield"
+      ]
+    },
+    "@types/node@24.2.0": {
+      "integrity": "sha512-3xyG3pMCq3oYCNg7/ZP+E1ooTaGB4cG8JWRsqqOYQdbWNY4zbaV0Ennrd7stjiJEFZCaybcIgpTjJWHRfBSIDw==",
+      "dependencies": [
+        "undici-types"
       ]
     },
     "@types/webidl-conversions@7.0.3": {
@@ -84,6 +91,9 @@
         "punycode"
       ]
     },
+    "undici-types@7.10.0": {
+      "integrity": "sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag=="
+    },
     "webidl-conversions@7.0.0": {
       "integrity": "sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g=="
     },
@@ -97,36 +107,22 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@cloudydeno/ddp@~0.1.9",
+      "jsr:@cloudydeno/ddp@~0.2.0-beta.2",
       "jsr:@cloudydeno/ejson@0.1",
       "jsr:@cloudydeno/opentelemetry@0.11",
       "npm:mongodb@6",
       "npm:sift@17"
     ],
-    "packageJson": {
-      "dependencies": [
-        "npm:mongodb@^6.16.0",
-        "npm:typescript@^5.8.3"
-      ]
-    },
     "members": {
       "testbed/links-demo": {
         "dependencies": [
           "jsr:@danopia/cosmosaur-server@*"
-        ],
-        "packageJson": {
-          "dependencies": [
-            "npm:@babel/runtime@^7.20.7",
-            "npm:@types/mocha@^8.2.3",
-            "npm:@types/node@^18.13.0",
-            "npm:@types/react-dom@^18.0.10",
-            "npm:@types/react@^18.0.26",
-            "npm:meteor-node-stubs@^1.2.5",
-            "npm:react-dom@^18.2.0",
-            "npm:react@^18.2.0",
-            "npm:typescript@^4.9.4"
-          ]
-        }
+        ]
+      },
+      "testbed/server-types": {
+        "dependencies": [
+          "jsr:@danopia/cosmosaur-server@*"
+        ]
       }
     }
   }

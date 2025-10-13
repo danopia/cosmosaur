@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "meteor/": "jsr:/@danopia/cosmosaur-server/meteor-api/"
+  }
+}

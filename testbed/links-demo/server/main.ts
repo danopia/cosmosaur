@@ -1,5 +1,5 @@
 import { Meteor } from 'meteor/meteor';
-import { Link, LinksCollection } from '../imports/api/links.ts';
+import { Link, LinksCollection } from '/imports/api/links.ts';
 
 async function insertLink({ title, url }: Pick<Link, 'title' | 'url'>) {
   await LinksCollection.insertAsync({ title, url, createdAt: new Date() });
