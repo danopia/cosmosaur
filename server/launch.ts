@@ -1,3 +1,5 @@
+import { serveDir } from "@std/http/file-server";
+
 import { serveWebsocket } from "@cloudydeno/ddp/server";
 
 import { getInterface, setDefaultDatabase } from "./registry.ts";
@@ -16,13 +18,17 @@ for (const func of getInterface().startupFuncs) {
 
 console.debug('Application loaded.');
 export default {
-  fetch(req, connInfo) {
+  async fetch(req, connInfo) {
 
     if (req.url.endsWith('/websocket')) {
       const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
       return response;
     }
 
-    return new Response('', { status: 404 });
+    return await serveDir(req, {
+      fsRoot: Deno.cwd(),
+    });
+
+    // return new Response('', { status: 404 });
   },
 } satisfies Deno.ServeDefaultExport as Deno.ServeDefaultExport;
