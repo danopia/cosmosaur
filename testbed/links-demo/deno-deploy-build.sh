@@ -2,7 +2,14 @@
 
 if ! which meteor
 then
-  npx meteor@"$(cut -d@ -f2 < .meteor/release)"
+  Release="$(cut -d@ -f2 < .meteor/release)"
+  curl https://install.meteor.com/\?release\="$Release" | sh
+  # hangs: npx meteor@"$(cut -d@ -f2 < .meteor/release)"
+fi
+
+if ! [ -d node_modules ]
+then
+  meteor npm ci
 fi
 
 rm -rf ./meteor-build
