@@ -1,11 +1,12 @@
 #!/bin/sh -eux
 
-if ! meteor
+if ! which meteor
 then
   npx meteor@"$(cut -d@ -f2 < .meteor/release)"
 fi
 
-TempDir="$(mktmp -d)"
+rm -rf ./meteor-build
+TempDir="$(mktemp -d)"
 
 meteor build \
   --directory "$TempDir" \
