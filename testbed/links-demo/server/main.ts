@@ -9,6 +9,16 @@ Meteor.onConnection(() => {
   console.log('DDP client connected');
 });
 
+Meteor.methods({
+  cow: async (text) => {
+    const url = new URL(`https://da.gd/cow`);
+    url.searchParams.set('text', text);
+    const resp = await fetch(url);
+    if (resp.status !== 200) throw new Meteor.Error('http-error', `Received HTTP ${resp.status}`)
+    return await resp.text();
+  },
+})
+
 Meteor.startup(async () => {
   // If the Links collection is empty, add some data.
   if (await LinksCollection.find().countAsync() === 0) {
