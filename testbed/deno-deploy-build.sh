@@ -23,11 +23,6 @@ meteor build \
 
 mv "$TempDir" ./meteor-build
 
-cat ./meteor-build/bundle/programs/web.browser/body.html
-cat ./meteor-build/bundle/programs/web.browser/head.html
-cat ./meteor-build/bundle/programs/server/config.json
-find ./meteor-build/bundle/programs/web.browser
-
 if [ -z "$HadNoDeps" ]
 then
   rm -rf node_modules
