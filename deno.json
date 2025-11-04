@@ -1,6 +1,6 @@
 {
   "name": "@danopia/cosmosaur-server",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "license": "MIT",
   "tasks": {
     "testbed-links-preload": "deno run --unstable-kv --allow-net=:8000 --preload=./server/preload.ts testbed/links-demo/server/main.ts --storage=deno-kv",
