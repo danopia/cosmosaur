@@ -23,8 +23,9 @@ meteor build \
 
 mv "$TempDir" ./meteor-build
 
-if [ -z "$HadNoDeps" ]
+if [ "$HadNoDeps" = "true" ]
 then
   rm -rf node_modules
-  rm -rf meteor-build/bundle/programs/server/*/
+  rm -rf .meteor/local
+  rm -rf meteor-build/bundle/programs/server/npm
 fi
