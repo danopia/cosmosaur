@@ -31,5 +31,5 @@ find ./meteor-build/bundle/programs/web.browser
 if [ -z "$HadNoDeps" ]
 then
   rm -rf node_modules
-  rm -rf meteor-build/bundle/programs/server
+  rm -rf meteor-build/bundle/programs/server/*/
 fi
