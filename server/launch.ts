@@ -62,10 +62,6 @@ export default {
 } satisfies Deno.ServeDefaultExport as Deno.ServeDefaultExport;
 
 async function loadBuildMeta(buildPath: string): Promise<MeteorBuildMeta> {
-  // const body = await Deno.readTextFile(new URL('bundle/programs/web.browser/body.html', buildPath));
-  // const head = await Deno.readTextFile(new URL('bundle/programs/web.browser/head.html', buildPath));
-  // const config = JSON.parse(await Deno.readTextFile(new URL('bundle/programs/server/config.json', buildPath)));
-
   const build: MeteorBuildMeta = {
     "server": JSON.parse(await Deno.readTextFile(new URL('bundle/programs/server/config.json', buildPath))),
     "web.browser": {
