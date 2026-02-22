@@ -30,4 +30,5 @@ export type MeteorBuildMeta = {
     appId: string;
     clientArchs: Array<"web.browser">;
   };
+  'packages'?: Array<string>;
 };

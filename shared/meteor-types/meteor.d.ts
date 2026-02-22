@@ -22,6 +22,9 @@ export namespace Meteor {
 
   var meteorRelease: string;
 
+  function _noYieldsAllowed<Tret=unknown>(f: () => Tret): Tret;
+  function _isPromise(r: unknown): boolean;
+
   interface ErrorConstructor {
     new (...args: any[]): Error;
     errorType: string;

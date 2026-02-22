@@ -10,6 +10,7 @@ type RenderOpts = {
   buildMeta: MeteorBuildMeta;
 };
 
+// TODO: use a given Backend instance for configuring the response
 export const renderHtml: (opts: RenderOpts) => string = opts => `<!DOCTYPE html>
 <html>
 <head>

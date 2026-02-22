@@ -22,7 +22,8 @@ AsyncCollection,
   UpsertResult,
 } from "@cloudydeno/ddp/livedata/types.ts";
 
-import { getRandomStream, type Database } from "../registry.ts";
+import { getRandomStream } from "../registry.ts";
+import type { Database } from "../types.ts";
 import {
   type PublicationEvent,
   type PublishStream,

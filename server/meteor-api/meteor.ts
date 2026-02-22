@@ -1,15 +1,17 @@
 import type { PublicationHandler, PublishStream } from '@cloudydeno/ddp/server';
 import type * as types from '../../shared/meteor-types/meteor.d.ts';
+import type * as mongoTypes from '../../shared/meteor-types/mongo.d.ts';
 import { MeteorError, MeteorTypedError } from "../../shared/various-api.ts";
-import { getInterface, withRandom, withSession } from '../registry.ts';
+import { getBackend, getSession, withRandom, withSession } from '../registry.ts';
 import type { EJSONableProperty } from '../../shared/meteor-types/ejson.d.ts';
-import { isObservableCursor, isSubscribable, type ObservableCursor, type Publishable, type Subscribable, type PublicationEvent, symbolSubscribable } from '../publishable.ts';
+import { type ObservableCursor, type Publishable, subscribeTo } from '../publishable.ts';
+import { MongoCollection } from "meteor/mongo";
 
 export const Meteor: typeof types.Meteor = {
 
   // DDP
   methods(methods) {
-    const iface = getInterface().ddpInterface;
+    const iface = getBackend().ddpInterface;
     for (const [name, impl] of Object.entries(methods)) {
       iface.addMethod(name, async (socket, params, random) => {
         const result = await withSession(socket, () =>
@@ -34,62 +36,7 @@ export const Meteor: typeof types.Meteor = {
       ...args: EJSONableProperty[]
     ) => void | Publishable | Promise<void | Publishable>
   ) {
-    const iface = getInterface().ddpInterface;
-    function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): PublishStream {
-      if (isSubscribable(item)) {
-        return item[symbolSubscribable](signal);
-      } else if (isObservableCursor(item)) {
-        const pipe = new TransformStream<PublicationEvent>;
-        const writer = pipe.writable.getWriter();
-        if (!item._getCollectionName) {
-          throw new Error(`item._getCollectionName is missing`);
-        }
-        const collection = item._getCollectionName();
-        const observer = item.observeChanges({
-          added(id, fields) {
-            writer.write({
-              msg: 'added',
-              collection, id, fields,
-            });
-          },
-          changed(id, fields) {
-            writer.write({
-              msg: 'changed',
-              collection, id, fields,
-            });
-          },
-          removed(id) {
-            writer.write({
-              msg: 'removed',
-              collection, id,
-            });
-          },
-        }, { signal: signal });
-        signal.addEventListener('abort', () => {
-          observer.stop();
-          writer.close();
-        });
-        return pipe.readable;
-      } else {
-        throw new Error(`Publication returned non-cursor: ${(item as object).constructor.name ?? item}`);
-      }
-
-      // if (item instanceof CollectionQuery) {
-      //   const stream = context.collectionDriver.find()
-      //   outStreams.push(
-      //     renderEventStream(
-      //       filterEventStream(stream, entity => item.filters.every(filter => filter({
-      //         ...(entity.spec as Record<string,unknown>),
-      //         _id: entity.metadata.name,
-      //       }))),
-      //       item.collectionName,
-      //       (x) => x._id,
-      //       ({_id, ...rest}) => rest,
-      //     ));
-      //   continue;
-      // }
-      // throw new Error(`published weird thing`);
-    }
+    const iface = getBackend().ddpInterface;
     const handler: PublicationHandler = async (sub, params) => {
       try {
         // const context = socketContexts.get(sub.connection);
@@ -123,21 +70,45 @@ export const Meteor: typeof types.Meteor = {
   // status: undefined,
 
   onConnection(cb) {
-    const iface = getInterface().ddpInterface;
+    const iface = getBackend().ddpInterface;
     iface.onConnection(cb);
   },
 
-  // makeErrorType: undefined,
+  makeErrorType(name: string, constructor: Function): types.Meteor.ErrorConstructor {
+    const errorClass = class extends Error {
+      errorType: string;
+      constructor(message: string) {
+        super(message);
+
+        // Ensure we get a proper stack trace in most Javascript environments
+        if (Error.captureStackTrace) {
+          // V8 environments (Chrome and Node.js)
+          Error.captureStackTrace(this, errorClass);
+        } else {
+          // Borrow the .stack property of a native Error object.
+          this.stack = new Error().stack;
+        }
+        // Safari magically works.
+
+        constructor.apply(this, arguments);
+
+        this.errorType = name;
+      };
+    };
+
+    return errorClass as unknown as types.Meteor.ErrorConstructor;
+  },
+
   // user: undefined,
   // userAsync: undefined,
-  // userId: undefined,
+  userId: () => getSession()?.userId ?? null,
   setInterval: undefined,
   setTimeout: undefined,
   clearInterval: undefined,
   clearTimeout: undefined,
-  defer: undefined,
+  defer: cb => setTimeout(cb, 1),
   startup(func: () => void | Promise<void>) {
-    getInterface().startupFuncs.push(func);
+    getBackend().startupFuncs.push(func);
   },
   // wrapAsync: undefined,
   // bindEnvironment: undefined,
@@ -180,6 +151,18 @@ export const Meteor: typeof types.Meteor = {
   // loggingOut: undefined,
   // logout: undefined,
   // logoutOtherClients: undefined,
+
+  _noYieldsAllowed(f) {
+    const result = f();
+    if (Meteor._isPromise(result)) {
+      throw new Error("function is a promise when calling Meteor._noYieldsAllowed");
+    }
+    return result
+  },
+  _isPromise(r: unknown): boolean {
+    return r ? typeof (r as Promise<unknown>).then === 'function' : false;
+  },
+
 } satisfies Partial<typeof types.Meteor> as unknown as typeof types.Meteor;
 
 

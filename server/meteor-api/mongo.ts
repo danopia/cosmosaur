@@ -2,7 +2,7 @@ import type { HasId, OptionalId, PartialCursorApi } from "@cloudydeno/ddp/liveda
 import { Collection, Cursor } from "@cloudydeno/ddp/livedata/facades.ts";
 import { AnonymousCollection } from "@cloudydeno/ddp/livedata/collections/anonymous.ts";
 
-import { getDatabase, getRandomStream } from "../registry.ts";
+import { getBackend, getRandomStream } from "../registry.ts";
 import { isSubscribable, type PublishStream, symbolSubscribable } from "../publishable.ts";
 
 // https://github.com/meteor/meteor/blob/4b61fbf9b1e2364e0b6ab99fd67e2b82cf673a94/packages/mongo/mongo.d.ts#L62
@@ -11,7 +11,7 @@ interface CollectionProps {
   //  * The server connection that will manage this collection. Uses the default connection if not specified. Pass the return value of calling `DDP.connect` to specify a different
   //  * server. Pass `null` to specify no connection. Unmanaged (`name` is null) collections cannot specify a connection.
   //  */
-  // connection?: DDP.DDPStatic | null;
+  // TODO: connection?: DdpClient;
   /** The method of generating the `_id` fields of new documents in this collection.  Possible values:
    * - **`'STRING'`**: random strings
    * - **`'MONGO'`**:  random [`Mongo.ObjectID`](#mongo_object_id) values
@@ -28,12 +28,14 @@ interface CollectionProps {
   defineMutationMethods?: boolean;
 }
 
-class MongoCollection<T extends HasId> extends Collection<T> {
+export class MongoCollection<T extends HasId> extends Collection<T> {
   constructor(name: string | null | undefined, opts: CollectionProps = {}) {
     if (name) {
-      const database = getDatabase();
-      if (!database) throw new Error(`No Database is registered`);
-      const coll = database.newCollection<T>(name);
+      const backend = getBackend();
+      if (backend.namedCollections.has(name)) {
+        throw new Error(`Double definition of collection "${name}"`);
+      }
+      const coll = backend.database.newCollection<T>(name);
       super(coll, class MongoCursor<T extends HasId> extends Cursor<T> {
         constructor(backingApi: PartialCursorApi<T>) {
           super(backingApi);
@@ -46,22 +48,35 @@ class MongoCollection<T extends HasId> extends Collection<T> {
         }
         [symbolSubscribable]: undefined | ((signal: AbortSignal) => PublishStream);
       });
+      backend.namedCollections.set(name, this);
       if (opts.defineMutationMethods != false) {
         // TODO: register methods
+        backend.ddpInterface.addMethod(`/${name}/insert`, (_session, _params) => {
+          throw new Error(`TODO: automatic insert method`);
+        });
+        backend.ddpInterface.addMethod(`/${name}/update`, (_session, _params) => {
+          throw new Error(`TODO: automatic update method`);
+        });
+        backend.ddpInterface.addMethod(`/${name}/remove`, (_session, _params) => {
+          throw new Error(`TODO: automatic remove method`);
+        });
       }
       return;
     }
     const anonColl = new AnonymousCollection();
     super(anonColl.getApi<T>());
   }
-  // Not currently implemented due to shared namespacing
-  static getCollection(_name: string): MongoCollection<HasId> | null {
-    throw new Error(`getCollection is not currently implemented due to its implied global namespace`);
-  //   const database = getDatabase();
-  //   if (!database) throw new Error(`No Database is registered`);
-  //   const coll = database.getCollection(name);
-  //   if (!coll) throw new Error(`No Database is registered`);
-  //   return new super(coll);
+  static getCollection<Tdoc extends HasId>(name: string): MongoCollection<Tdoc> | null {
+    const backend = getBackend();
+    const coll = backend.namedCollections.get(name);
+    if (!coll) throw new Error(`Collection "${name}" is not registered yet`);
+    return coll as MongoCollection<Tdoc>;
+  }
+  static ensureCollection<Tdoc extends HasId>(name: string): MongoCollection<Tdoc> {
+    const backend = getBackend();
+    const coll = backend.namedCollections.get(name);
+    if (coll) return coll as MongoCollection<Tdoc>;
+    return new this(name);
   }
 
   // Synchronize IDs of inserted documents via DDP shared seed system

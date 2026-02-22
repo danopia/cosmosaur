@@ -1,25 +1,12 @@
-import { serveWebsocket } from "@cloudydeno/ddp/server";
+import * as harness from "@danopia/cosmosaur-server/harness";
 
-import { getInterface, setDefaultDatabase } from "@danopia/cosmosaur-server/registry";
-import { openAutomaticDatabase } from "@danopia/cosmosaur-server/storage/auto";
+await harness.connectDefaultBackend();
 
-setDefaultDatabase(await openAutomaticDatabase());
+await harness.openBuild(new URL('links-demo/meteor-build', import.meta.url).toString())
 
 console.debug('Loading server modules...');
 await import('./links-demo/server/main.ts');
 
-console.debug('Waiting for server startup...');
-for (const func of getInterface().startupFuncs) {
-  await func();
-}
+await harness.runStartup();
 
-console.debug('Application loaded.');
-Deno.serve((req, connInfo) => {
-
-  if (req.url.endsWith('/websocket')) {
-    const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
-    return response;
-  }
-
-  return new Response('', { status: 404 });
-});
+harness.serveViaListen();

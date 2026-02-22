@@ -1,27 +1,16 @@
-import { serveWebsocket } from "@cloudydeno/ddp/server";
+import * as harness from "./harness.ts";
 
-import { getInterface, setDefaultDatabase } from "./registry.ts";
-import { openAutomaticDatabase } from "./storage/detection.ts";
+await harness.connectDefaultBackend();
 
-console.debug('Loading server database...');
-setDefaultDatabase(await openAutomaticDatabase());
+console.debug('Checking for built Meteor bundle...');
+if (Deno.args[1] == "--build-path") {
+  await harness.openBuild(Deno.args[2]);
+}
 
 console.debug('Loading server modules...');
 setTimeout(async () => {
 
-  console.debug('Waiting for server startup...');
-  for (const func of getInterface().startupFuncs) {
-    await func();
-  }
+  await harness.runStartup();
 
-  console.debug('Application loaded.');
-  Deno.serve((req, connInfo) => {
-
-    if (req.url.endsWith('/websocket')) {
-      const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
-      return response;
-    }
-
-    return new Response('', { status: 404 });
-  });
+  harness.serveViaListen();
 });

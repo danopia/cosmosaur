@@ -1,25 +1,68 @@
+import { serveDir } from "@std/http/file-server";
 import { serveWebsocket } from "@cloudydeno/ddp/server";
 
-import { getInterface, setDefaultDatabase } from "./registry.ts";
+import { getBackend, setDefaultBackend } from "./registry.ts";
 import { openAutomaticDatabase } from "./storage/detection.ts";
+import { newBackend } from "./backend.ts";
+import { renderHtml } from "./build-html.ts";
 
-export async function connectDefaultDatabase() {
+export { openBuild } from "./open-build.ts";
+
+/** Registers a default Backend by an autodetected Database instance. */
+export async function connectDefaultBackend() {
   console.debug('Loading server database...');
-  setDefaultDatabase(await openAutomaticDatabase());
+  setDefaultBackend(newBackend({
+    database: await openAutomaticDatabase(),
+  }));
 }
 
+
+/** Runs all startup hooks for the current Backend in sequential order. */
 export async function runStartup() {
   console.debug('Waiting for server startup...');
-  for (const func of getInterface().startupFuncs) {
+  for (const func of getBackend().startupFuncs) {
     await func();
   }
   console.debug('Application loaded.');
 }
 
-export function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo): Response {
+
+export async function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo): Promise<Response> {
+  const backend = getBackend();
+
   if (req.url.endsWith('/websocket')) {
-    const { response } = serveWebsocket(req, connInfo, getInterface().ddpInterface);
+    const { response } = serveWebsocket(req, connInfo, backend.ddpInterface);
     return response;
+  }
+
+  // Extra routes when a build is loaded.
+  if (backend.meteorBuild?.buildMeta) {
+    const { buildMeta, rootFsPath } = backend.meteorBuild;
+
+    // Serve static assets if they are found in our build.
+    const staticResp = await serveDir(req, {
+      fsRoot: new URL('bundle/programs/web.browser/', rootFsPath).pathname,
+    });
+    if (staticResp.status != 404) {
+      return staticResp;
+    }
+
+    // TODO: Support for routing to any additional routes registered by the loaded backend.
+
+    // Otherwise we serve the app's dynamic HTML.
+    const html = renderHtml({
+      buildMeta,
+      cssUrl: `${buildMeta['web.browser'].hashes.css}.css`,
+      jsUrl: `${buildMeta['web.browser'].hashes.js}.js`,
+      rootUrl: new URL('/', req.url).toString(),
+      gitCommitHash: Deno.env.get('DENO_DEPLOYMENT_ID'),
+    });
+
+    return new Response(html, {
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+      },
+    });
   }
 
   return new Response('', { status: 404 });
