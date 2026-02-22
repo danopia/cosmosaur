@@ -37,6 +37,7 @@
     "./registry": "./server/registry.ts"
   },
   "workspace": [
+    "cli",
     "testbed/server-types",
     "testbed/links-demo"
   ],

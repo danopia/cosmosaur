@@ -5,3 +5,4 @@ deno.json
 deno.lock
 .*
 server
+cli
