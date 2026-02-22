@@ -37,11 +37,10 @@ export async function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo
 
   // Extra routes when a build is loaded.
   if (backend.meteorBuild?.buildMeta) {
-    const { buildMeta, rootFsPath } = backend.meteorBuild;
 
     // Serve static assets if they are found in our build.
     const staticResp = await serveDir(req, {
-      fsRoot: new URL('bundle/programs/web.browser/', rootFsPath).pathname,
+      fsRoot: new URL('bundle/programs/web.browser/', backend.meteorBuild.rootFsPath).pathname,
     });
     if (staticResp.status != 404) {
       return staticResp;
@@ -51,9 +50,6 @@ export async function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo
 
     // Otherwise we serve the app's dynamic HTML.
     const html = renderHtml({
-      buildMeta,
-      cssUrl: `${buildMeta['web.browser'].hashes.css}.css`,
-      jsUrl: `${buildMeta['web.browser'].hashes.js}.js`,
       rootUrl: new URL('/', req.url).toString(),
       gitCommitHash: Deno.env.get('DENO_DEPLOYMENT_ID'),
     });

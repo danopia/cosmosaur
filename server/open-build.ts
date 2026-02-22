@@ -15,6 +15,33 @@ export async function openBuild(fsPath = "."): Promise<MeteorBuildMeta> {
     rootFsPath: buildPath,
   };
 
+  backend.runtimeConfig = {
+    // "gitCommitHash": opts.gitCommitHash,
+    "meteorEnv": {
+      "NODE_ENV": "production",
+      "TEST_METADATA": "{}",
+    },
+    ...backend.runtimeConfig,
+    "meteorRelease": buildMeta.server.meteorRelease,
+    // "DISABLE_SOCKJS": true,
+    // "PUBLIC_SETTINGS": opts.publicSettings ?? {},
+    // "reactFastRefreshEnabled": false,
+    "appId": buildMeta.server.appId,
+    "isModern": true,
+    "autoupdate": {
+      "versions": {
+        "web.browser": {
+          // TODO: version detection
+          // "version": opts.autoupdateVersion ?? opts.gitCommitHash ?? 'none',
+          "version": 'none',
+          "versionNonRefreshable": buildMeta['web.browser'].hashes.js, // for whole-page changes
+          "versionRefreshable": buildMeta['web.browser'].hashes.css, // for CSS changes
+          // "versionReplaceable": buildCommit, // for HMR
+        },
+      },
+    },
+  };
+
   backend.ddpInterface
     .addPublication('meteor_autoupdate_clientVersions', x => {
       x.added('meteor_autoupdate_clientVersions', 'web.browser', {
