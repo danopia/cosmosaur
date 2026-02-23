@@ -50,11 +50,9 @@ export async function serveHandler(req: Request, connInfo: Deno.ServeHandlerInfo
 
     // Otherwise we serve the app's dynamic HTML.
     const html = renderHtml({
-      extraRuntimeConfig: {
-        ROOT_URL: new URL('/', req.url).toString(),
-        ROOT_URL_PATH_PREFIX: '', // TODO: split pathname out from ROOT_URL
-        gitCommitHash: Deno.env.get('DENO_DEPLOYMENT_ID'),
-      }
+      ROOT_URL: new URL('/', req.url).toString(),
+      ROOT_URL_PATH_PREFIX: '', // TODO: split pathname out from ROOT_URL
+      gitCommitHash: Deno.env.get('DENO_DEPLOYMENT_ID'),
     });
 
     return new Response(html, {

@@ -1,30 +1,21 @@
 import type {
-  DocumentFields,
   HasId,
-  ObserveChangesCallbacks,
-  ObserverHandle,
   PartialCollectionApi,
-  UpdateOpts,
-  UpsertOpts,
-  UpsertResult,
 } from "@cloudydeno/ddp/livedata/types.ts";
 import {
   AnonymousCollection,
   AnonymousCollectionApi,
 } from "@cloudydeno/ddp/livedata/collections/anonymous.ts";
-import { Cursor } from "@cloudydeno/ddp/livedata/facades.ts";
-import type { EJSONable } from "@cloudydeno/ejson";
 
 import type { Database } from "../types.ts";
-import { LiveCollection } from "@cloudydeno/ddp/livedata/collections/live.ts";
 import { getRandomStream } from "@danopia/cosmosaur-server/registry";
 
 class InmemCollectionApi<Tdoc extends HasId> extends AnonymousCollectionApi<Tdoc> {
   constructor(
-    coll: LiveCollection,
+    coll: AnonymousCollection,
     public readonly randomStreamName: string,
   ) {
-    super(coll);
+    super(coll, randomStreamName);
   }
   protected override makeNewId() {
     return getRandomStream(this.randomStreamName).id();
@@ -37,7 +28,7 @@ export class AnonymousDatabase implements Database {
   #collectionMap = new Map<string, AnonymousCollection>();
   newCollection<Tdoc extends HasId>(name: string): PartialCollectionApi<Tdoc> {
     if (this.#collectionMap.has(name)) throw new Error(`Collection ${name} already defined`);
-    const coll = new AnonymousCollection();
+    const coll = new AnonymousCollection(name);
     this.#collectionMap.set(name, coll);
     return new InmemCollectionApi<Tdoc>(coll, `/collection/${name}`);
   }
