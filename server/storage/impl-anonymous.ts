@@ -16,6 +16,20 @@ import { Cursor } from "@cloudydeno/ddp/livedata/facades.ts";
 import type { EJSONable } from "@cloudydeno/ejson";
 
 import type { Database } from "../types.ts";
+import { LiveCollection } from "@cloudydeno/ddp/livedata/collections/live.ts";
+import { getRandomStream } from "@danopia/cosmosaur-server/registry";
+
+class InmemCollectionApi<Tdoc extends HasId> extends AnonymousCollectionApi<Tdoc> {
+  constructor(
+    coll: LiveCollection,
+    public readonly randomStreamName: string,
+  ) {
+    super(coll);
+  }
+  protected override makeNewId() {
+    return getRandomStream(this.randomStreamName).id();
+  }
+}
 
 export class AnonymousDatabase implements Database {
   constructor(
@@ -25,14 +39,12 @@ export class AnonymousDatabase implements Database {
     if (this.#collectionMap.has(name)) throw new Error(`Collection ${name} already defined`);
     const coll = new AnonymousCollection();
     this.#collectionMap.set(name, coll);
-    // return new UpdatableAnonymousCollectionApi<Tdoc>(coll);
-    return coll.getApi<Tdoc>();
+    return new InmemCollectionApi<Tdoc>(coll, `/collection/${name}`);
   }
   getCollection<Tdoc extends HasId>(name: string): PartialCollectionApi<Tdoc> | null {
     const coll = this.#collectionMap.get(name);
     if (!coll) throw new Error(`Collection ${name} not defined`);
-    // return new UpdatableAnonymousCollectionApi<Tdoc>(coll);
-    return coll.getApi<Tdoc>();
+    return new InmemCollectionApi<Tdoc>(coll, `/collection/${name}`);
   }
 }
 

@@ -1,5 +1,7 @@
 import type { HasId, ObserverHandle, PartialCollectionApi } from "@cloudydeno/ddp/livedata/types.ts";
 import type { DdpInterface, DdpSession } from "@cloudydeno/ddp/server";
+import type { RandomStream } from "@cloudydeno/ddp/random";
+
 import type { Hook } from "meteor/callback-hook";
 import type { MongoCollection } from "./meteor-api/mongo.ts";
 import type { MeteorBuildMeta } from "../shared/types.ts";
@@ -102,6 +104,7 @@ export interface Backend {
   // userIdMap: WeakMap<DdpSession, string>;
   meteorBuild?: MeteorBuild;
   runtimeConfig: RuntimeConfig;
+  randomStream: RandomStream;
   // packages: Map<string, Record<string, unknown>>;
   settings: Record<string,unknown> & {
     public: Record<string,unknown>;

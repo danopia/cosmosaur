@@ -2,6 +2,7 @@ import { DdpInterface } from "@cloudydeno/ddp/server";
 
 import type { Backend, Database, MeteorBuild, MeteorSettings } from "./types.ts";
 import { AnonymousDatabase } from "./storage/impl-anonymous.ts";
+import { RandomStream } from "@cloudydeno/ddp/random";
 // import { Hook } from "meteor/callback-hook";
 
 export function newBackend(opts: {
@@ -29,6 +30,7 @@ export function newBackend(opts: {
     settings: opts.settings ?? {
       public: {},
     },
+    randomStream: new RandomStream('server'),
 
     // // accounts-base
     // loginHandlers: new Map,

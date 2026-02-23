@@ -58,6 +58,8 @@ export function getRandom(): RandomStream | null {
 export function getRandomStream(name: string): Random {
   const random = getRandom();
   if (random) return random.getStream(name);
-  return new Random();
+  const backend = BackendStorage.getStore() ?? bySymbols[symbolDefaultBackend];
+  if (backend) return backend.randomStream.getStream(name);
+  return new Random(); // TODO: is this a bug, should we throw instead?
 }
 export const withRandom: <R>(store: RandomStream | null, callback: () => R) => R = RandomStorage.run.bind(RandomStorage);

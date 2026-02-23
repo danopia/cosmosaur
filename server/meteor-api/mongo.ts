@@ -19,6 +19,7 @@ interface CollectionProps {
    * The default id generation technique is `'STRING'`.
    */
   idGeneration?: 'STRING' /*| 'MONGO'*/;
+  // idGenerator?: () => string;
   // /**
   //  * An optional transformation function. Documents will be passed through this function before being returned from `fetch` or `findOne`, and before being passed to callbacks of
   //  * `observe`, `map`, `forEach`, `allow`, and `deny`. Transforms are *not* applied for the callbacks of `observeChanges` or to cursors returned from publish functions.
@@ -79,21 +80,11 @@ export class MongoCollection<T extends HasId> extends Collection<T> {
     return new this(name);
   }
 
-  // Synchronize IDs of inserted documents via DDP shared seed system
-  // This isn't quite right - insert id sync is supposed to be for local simulation/prediction
-  // Oh well.
-  private withRandomId(doc: OptionalId<T>): T {
-    const collRandom = getRandomStream('/collection/' + this);
-    return {
-      ...doc,
-      _id: collRandom.id(),
-    } as T;
-  }
   override insert(doc: OptionalId<T>): string {
-    return super.insert(doc._id ? doc : this.withRandomId(doc));
+    return super.insert(doc);
   }
   override insertAsync(doc: OptionalId<T>): Promise<string> {
-    return super.insertAsync(doc._id ? doc : this.withRandomId(doc));
+    return super.insertAsync(doc);
   }
 }
 

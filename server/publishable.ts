@@ -75,6 +75,9 @@ export function subscribeTo(item: Subscribable | ObservableCursor<unknown>, sign
         });
       },
     }, { signal: signal });
+    writer.write({
+      msg: 'ready',
+    });
     signal.addEventListener('abort', () => {
       observer.stop();
       writer.close();

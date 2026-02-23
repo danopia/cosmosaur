@@ -1,20 +1,11 @@
 import { getBackend } from "./registry.ts";
 import type { RuntimeConfig } from "./types.ts";
 
-type RenderOpts = {
-  // cssUrl: string;
-  // jsUrl: string;
-  gitCommitHash?: string;
-  rootUrl?: string;
-  // autoupdateVersion?: string;
-  // publicSettings?: Record<string, unknown>;
-  // buildMeta: MeteorBuildMeta;
-  extraRuntimeConfig?: Partial<RuntimeConfig>;
-};
-
-// TODO: use a given Backend instance for configuring the response
-export function renderHtml(opts: RenderOpts): string {
+export function renderHtml(
+  extraRuntimeConfig: Partial<RuntimeConfig>,
+): string {
   const backend = getBackend();
+
   if (!backend.meteorBuild) throw new Error(
     `Cannot serve HTML without meteorBuild on Backend`);
   const { buildMeta } = backend.meteorBuild;
@@ -29,7 +20,7 @@ export function renderHtml(opts: RenderOpts): string {
     // "ROOT_URL_PATH_PREFIX": "",
     // "reactFastRefreshEnabled": false,
     "PUBLIC_SETTINGS": backend.settings.public,
-    ...opts.extraRuntimeConfig,
+    ...extraRuntimeConfig,
   };
 
   return `<!DOCTYPE html>
