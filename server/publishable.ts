@@ -44,3 +44,62 @@ export function isObservableCursor<T>(given: unknown): given is ObservableCursor
   if (typeof thing._getCollectionName != 'function') return false;
   return true;
 }
+
+export function subscribeTo(item: Subscribable | ObservableCursor<unknown>, signal: AbortSignal): PublishStream {
+  if (isSubscribable(item)) {
+    return item[symbolSubscribable](signal);
+  } else if (isObservableCursor(item)) {
+    const pipe = new TransformStream<PublicationEvent>;
+    const writer = pipe.writable.getWriter();
+    if (!item._getCollectionName) {
+      throw new Error(`item._getCollectionName is missing`);
+    }
+    const collection = item._getCollectionName();
+    const observer = item.observeChanges({
+      added(id, fields) {
+        writer.write({
+          msg: 'added',
+          collection, id, fields,
+        });
+      },
+      changed(id, fields) {
+        writer.write({
+          msg: 'changed',
+          collection, id, fields,
+        });
+      },
+      removed(id) {
+        writer.write({
+          msg: 'removed',
+          collection, id,
+        });
+      },
+    }, { signal: signal });
+    writer.write({
+      msg: 'ready',
+    });
+    signal.addEventListener('abort', () => {
+      observer.stop();
+      writer.close();
+    });
+    return pipe.readable;
+  } else {
+    throw new Error(`Publication returned non-cursor: ${(item as object).constructor.name ?? item}`);
+  }
+
+  // if (item instanceof CollectionQuery) {
+  //   const stream = context.collectionDriver.find()
+  //   outStreams.push(
+  //     renderEventStream(
+  //       filterEventStream(stream, entity => item.filters.every(filter => filter({
+  //         ...(entity.spec as Record<string,unknown>),
+  //         _id: entity.metadata.name,
+  //       }))),
+  //       item.collectionName,
+  //       (x) => x._id,
+  //       ({_id, ...rest}) => rest,
+  //     ));
+  //   continue;
+  // }
+  // throw new Error(`published weird thing`);
+}

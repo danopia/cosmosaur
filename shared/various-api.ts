@@ -10,6 +10,13 @@ export class MeteorError extends Error implements Meteor.Error {
   }
 };
 
+// TODO: is this useful for anything?
+export function isMeteorError(thing: unknown): thing is MeteorError {
+  const err = thing as MeteorError | undefined;
+  if (!err?.error) return false;
+  return (err.name == 'MeteorError');
+}
+
 export class MeteorTypedError extends Error implements Meteor.TypedError {
   constructor(
     message: string,

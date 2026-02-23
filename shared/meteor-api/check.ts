@@ -40,6 +40,9 @@ export function check<T extends Pattern>(
     if (typeof value == 'string') return;
   } else if (pattern === Number) {
     if (typeof value == 'number') return;
+  } else if (pattern === Object) {
+    // TODO: totally wrong tbh
+    if (typeof value == 'object') return;
   } else {
     console.log(`TODO: check`, [value, pattern]);
   }

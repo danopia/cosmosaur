@@ -1,4 +1,5 @@
-import type { Database } from "../registry.ts";
+import type { Database } from "../types.ts";
+import { AnonymousDatabase } from "./impl-anonymous.ts";
 
 async function denoKvDetection(required: boolean) {
   if (required && !Deno.openKv) throw new Error(
@@ -36,12 +37,21 @@ async function mongodbDetection(required: boolean) {
   }
 }
 
+function anonymousDetection(required: boolean) {
+  if (!required) return false;
+  console.debug('Setting up in-memory database...');
+  return new AnonymousDatabase();
+}
+
 const driverList = [{
   name: 'mongodb',
   openFunc: mongodbDetection,
 }, {
   name: 'deno-kv',
   openFunc: denoKvDetection,
+}, {
+  name: 'anonymous',
+  openFunc: anonymousDetection,
 }];
 
 export async function startDetectedDriver(): Promise<Database> {
@@ -50,7 +60,11 @@ export async function startDetectedDriver(): Promise<Database> {
     if (storage) return storage;
   }
 
-  throw new Error(`No database driver is available to connect. Provide a MongoDB URL, or add the --unstable-kv flag.`);
+  throw new Error([
+    `No database driver is available to connect.`,
+    `Provide a MongoDB URL, or add the --unstable-kv flag.`,
+    `Or specify one of [${driverList.map(x => x.name).join(', ')}] to --storage=`,
+  ].join(' '));
 }
 
 export async function startSpecificDriver(explicitStorage: string): Promise<Database> {

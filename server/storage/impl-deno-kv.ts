@@ -14,7 +14,8 @@ AsyncCollection,
   UpsertResult,
 } from "@cloudydeno/ddp/livedata/types.ts";
 
-import { getRandomStream, type Database } from "../registry.ts";
+import { getRandomStream } from "../registry.ts";
+import type { Database } from "../types.ts";
 import {
   type PublicationEvent,
   type PublishStream,
@@ -149,11 +150,11 @@ export class KvDocCollection<Tdoc extends HasId> implements AsyncCollection<Tdoc
 export function makeReturnDoc<Tdoc extends HasId>(original: Tdoc, opts: FindOpts): Tdoc {
   // const cloned = EJSON.clone(original);
 
-  const fieldsSpec = (opts?.fields ?? {}) as Record<keyof Tdoc, boolean|undefined>;
+  const fieldsSpec = (opts?.fields ?? {}) as Record<keyof Tdoc, boolean|number|undefined>;
   const subset: Partial<Tdoc> = {};
   let includeOthers = true;
   for (const pair of Object.entries(fieldsSpec)) {
-    if (pair[1] === true) {
+    if (pair[1] === true || pair[1] === 1) {
       includeOthers = false;
       if (pair[0] in original) {
         subset[pair[0] as keyof Tdoc] = structuredClone(original[pair[0] as keyof Tdoc]);
